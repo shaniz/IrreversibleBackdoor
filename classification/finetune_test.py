@@ -28,20 +28,19 @@ if args.gpus:
     os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(gpu_list)
     # os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, [4,2]))
     devices_id = [id for id in range(len(gpu_list))]
-from utils import test, process, resume_dict, initialize00, set_seed, get_finetuned_model, get_pretrained_model, get_init_model
-from timm.models import create_model
+from utils import test, set_seed, get_finetuned_model, get_pretrained_model
 from tqdm import tqdm
 import torch
 from torch import nn, optim
-from utils import get_dataset, test_accuracy
-import wandb
-import timm
+from utils import get_dataset
 
 
 def test_finetune(model, trainset, testset, epochs, lr):
     model = nn.DataParallel(model)
-    trainloader = DataLoader(trainset, batch_size=256, shuffle=True, num_workers=4,drop_last=True)
-    testloader = DataLoader(testset, batch_size=256, shuffle=False, num_workers=4,drop_last=True)
+    trainloader = DataLoader(trainset, batch_size=256, shuffle=True, num_workers=4,drop_last=True,
+                              persistent_workers=True)
+    testloader = DataLoader(testset, batch_size=256, shuffle=False, num_workers=4,drop_last=True,
+                              persistent_workers=True)
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4)
     criterion = nn.CrossEntropyLoss()
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)
@@ -62,8 +61,10 @@ def test_finetune(model, trainset, testset, epochs, lr):
 
 def test_finetune_final(args, mode, model, trainset, testset, epochs, lr):
     model = nn.DataParallel(model)
-    trainloader = DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4,drop_last=True)
-    testloader = DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4,drop_last=True)
+    trainloader = DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=4,drop_last=True,
+                              persistent_workers=True)
+    testloader = DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=4,drop_last=True,
+                              persistent_workers=True)
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4)
     criterion = nn.CrossEntropyLoss()
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)
@@ -83,19 +84,19 @@ def test_finetune_final(args, mode, model, trainset, testset, epochs, lr):
         test_acc, test_loss = test(model, testloader, torch.device('cuda'))
         accs.append(test_acc)
         losses.append(test_loss)
-        wandb.log({f'{mode}: test accuracy':test_acc, f'{mode}: test loss':test_loss,})
+        # wandb.log({f'{mode}: test accuracy':test_acc, f'{mode}: test loss':test_loss,})
     print(f'test accuracy is {accs}, test loss is {losses}')
     return round(test_acc,2), round(test_loss,2)
 
 if __name__ == '__main__':
     args = args_parser()
-    import wandb 
-    wandb.init(
-    project="sohpon classification finetune test",  
-    entity="sophon",
-    config = args,
-    name = f"{args.arch}_{args.dataset}" ,
-    notes = args.notes)   
+    # import wandb
+    # wandb.init(
+    # project="sohpon classification finetune test",
+    # entity="sophon",
+    # config = args,
+    # name = f"{args.arch}_{args.dataset}" ,
+    # notes = args.notes)
     seed = args.seed
     set_seed(seed)
     trainset_tar, testset_tar = get_dataset(args.dataset, '../../../datasets', args=args)

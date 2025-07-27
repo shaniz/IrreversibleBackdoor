@@ -43,7 +43,7 @@ from tqdm import tqdm
 import torch
 from torch import nn, optim
 from utils import get_dataset
-import wandb
+# import wandb
 import learn2learn as l2l
 import copy
 import timm
@@ -133,8 +133,10 @@ def partial_fast_adapt_multibatch(batches, learner, loss, shots, ways, device):
 
 def test_finetune(model, trainset, testset, epochs, lr):
     model = nn.DataParallel(model)
-    trainloader = DataLoader(trainset, batch_size=256, shuffle=True, num_workers=4,drop_last=True)
-    testloader = DataLoader(testset, batch_size=256, shuffle=False, num_workers=4,drop_last=True)
+    trainloader = DataLoader(trainset, batch_size=256, shuffle=True, num_workers=4,drop_last=True,
+                              persistent_workers=True)
+    testloader = DataLoader(testset, batch_size=256, shuffle=False, num_workers=4,drop_last=True,
+                              persistent_workers=True)
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4)
     criterion = nn.CrossEntropyLoss()
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)
@@ -153,8 +155,10 @@ def test_finetune(model, trainset, testset, epochs, lr):
 
 def test_finetune_final(mode, model, trainset, testset, epochs, lr):
     model = nn.DataParallel(model)
-    trainloader = DataLoader(trainset, batch_size=256, shuffle=True, num_workers=4,drop_last=True)
-    testloader = DataLoader(testset, batch_size=256, shuffle=False, num_workers=4,drop_last=True)
+    trainloader = DataLoader(trainset, batch_size=256, shuffle=True, num_workers=4,drop_last=True,
+                              persistent_workers=True)
+    testloader = DataLoader(testset, batch_size=256, shuffle=False, num_workers=4,drop_last=True,
+                              persistent_workers=True)
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4)
     criterion = nn.CrossEntropyLoss()
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)
@@ -171,7 +175,7 @@ def test_finetune_final(mode, model, trainset, testset, epochs, lr):
             optimizer.step()
         # scheduler.step()
         test_acc, test_loss = test(model, testloader, torch.device('cuda'))
-        wandb.log({f'{mode}: test accuracy':test_acc, f'{mode}: test loss':test_loss,})
+        # wandb.log({f'{mode}: test accuracy':test_acc, f'{mode}: test loss':test_loss,})
     return round(test_acc,2), round(test_loss,2)
 
 def save_args_to_file(args, file_path):
@@ -195,35 +199,39 @@ def main(
     args.from_machine = ip_address
     # args.arch = 'caformer'
 
-    wandb.init(
-    project="Sophon classification",  
-    entity="Sophon",
-    config = args,
-    name = f"{args.arch}_alpha{args.alpha}_beta{args.beta}_ml{args.ml_loop}_nl{args.nl_loop}_batches{args.adaptation_steps}" ,
-    notes= args.notes,         
-  
-)   
-    wandb.config.update(args)
+#     wandb.init(
+#     project="Sophon classification",
+#     entity="Sophon",
+#     config = args,
+#     name = f"{args.arch}_alpha{args.alpha}_beta{args.beta}_ml{args.ml_loop}_nl{args.nl_loop}_batches{args.adaptation_steps}" ,
+#     notes= args.notes,
+#
+# )
+#     wandb.config.update(args)
     shots = int(args.bs * 0.9 / ways)
     print(f'shots is {shots}')
     device = torch.device('cpu')
     if cuda and torch.cuda.device_count():
         # torch.cuda.manual_seed(seed)
         device = torch.device('cuda')
-    wandb.log({'seed':seed})
+    # wandb.log({'seed':seed})
     save_path = args.root +'/'+args.arch+'_'+ args.dataset + '/'
     adaptation_steps = args.adaptation_steps
     now = datetime.now()
     save_path = save_path + '/' + f'{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}/'
     os.makedirs(save_path, exist_ok=True)
-    wandb.log({'save path': save_path})
+    # wandb.log({'save path': save_path})
     save_args_to_file(args, save_path+"args.json")
     trainset_ori, testset_ori = get_dataset('ImageNet', '../../../datasets/', subset='imagenette', args=args)
-    original_trainloader = DataLoader(trainset_ori, batch_size=args.bs, shuffle=True, num_workers=0)
-    original_testloader = DataLoader(testset_ori, batch_size=args.bs, shuffle=False, num_workers=0)
+    original_trainloader = DataLoader(trainset_ori, batch_size=args.bs, shuffle=True, num_workers=4,
+                              persistent_workers=True)
+    original_testloader = DataLoader(testset_ori, batch_size=args.bs, shuffle=False, num_workers=4,
+                              persistent_workers=True)
     trainset_tar, testset_tar = get_dataset(args.dataset, '../../../datasets', args=args)
-    target_trainloader = DataLoader(trainset_tar, batch_size=args.bs, shuffle=True, num_workers=0,drop_last=True)
-    target_testloader = DataLoader(testset_tar, batch_size=args.bs, shuffle=False, num_workers=0,drop_last=True)
+    target_trainloader = DataLoader(trainset_tar, batch_size=args.bs, shuffle=True, num_workers=4,drop_last=True,
+                              persistent_workers=True)
+    target_testloader = DataLoader(testset_tar, batch_size=args.bs, shuffle=False, num_workers=4,drop_last=True,
+                              persistent_workers=True)
     original_iter = iter(original_trainloader)
     target_iter = iter(target_trainloader)
 
@@ -308,7 +316,7 @@ def main(
                 print('Query set loss', round(evaluation_error.item(),2))
                 print('Query set accuracy', round(100*evaluation_accuracy.item(),2), '%')
                 maml_opt.step()
-                wandb.log({"Query set loss": evaluation_error.item(), "Query set accuracy": 100*evaluation_accuracy.item(), "Gradients after maml loop": round(avg_gradients,2)})
+                # wandb.log({"Query set loss": evaluation_error.item(), "Query set accuracy": 100*evaluation_accuracy.item(), "Gradients after maml loop": round(avg_gradients,2)})
                 queryset_loss.append(-evaluation_error)
                 queryset_acc.append(100*evaluation_accuracy.item())
                 model = load_bn(model, means, vars)
@@ -337,7 +345,7 @@ def main(
             originaltrain_loss.append(round(loss.item(),2))
             natural_optimizer.step()
             acc, loss = test_original(model, original_testloader, device)
-            wandb.log({"Original test acc": acc, "Original test loss": loss, "Gradients after natural loop":avg_gradients})
+            # wandb.log({"Original test acc": acc, "Original test loss": loss, "Gradients after natural loop":avg_gradients})
             originaltest_loss.append(loss)
             originaltest_acc.append(acc)
 
@@ -353,7 +361,7 @@ def main(
             test_model = copy.deepcopy(model.module)
             finetuneacc, finetunetest_loss = test_finetune(test_model, trainset_tar, testset_tar, args.finetune_epochs, args.finetune_lr)
             print(f'finetune outcome: test accuracy is{finetuneacc}, test loss is{finetunetest_loss}')  
-            wandb.log({"Finetune outcome-test accuracy":finetuneacc, "Finetune outcome-test loss":finetunetest_loss})
+            # wandb.log({"Finetune outcome-test accuracy":finetuneacc, "Finetune outcome-test loss":finetunetest_loss})
             finetuned_target_testacc.append(finetuneacc)
             finetuned_target_testloss.append(finetunetest_loss)
 
@@ -400,7 +408,7 @@ def main(
         'total_loop': args.total_loop,
         'batch_size': args.bs},save_path+'/'+name)
     print(f'Saving to {save_path}/{name}......')
-    wandb.log({'Checkpoints': save_path+'/'+name})
+    # wandb.log({'Checkpoints': save_path+'/'+name})
 
     save_data(save_path, queryset_loss, queryset_acc, originaltest_loss, originaltrain_loss, originaltest_acc, finetuned_target_testacc, finetuned_target_testloss, final_original_testacc, final_finetuned_testacc, final_finetuned_testloss, total_loop_index, ml_index, nl_index)
     return save_path+'/'+name
