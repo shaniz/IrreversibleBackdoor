@@ -1,8 +1,9 @@
-imagenette2
-imagenette2.tgz
+dataset/imagenette2
+dataset/imagenette2.tgz
 classification/results
-requirements-old.txt
 resnet50_imagenette.pth
+resnet50_imagenette_transform.pth
+resnet50_imagenette_transform2.pth
 .venv
 
 

@@ -8,11 +8,19 @@ from tqdm import tqdm
 
 def main():
     # ---- Config ----
-    data_dir = './imagenette2'  # Change if you use a different resolution
+    data_dir = '../dataset/imagenette2'  # Change if you use a different resolution
     batch_size = 64
-    num_epochs = 10
+    num_epochs = 20
     learning_rate = 1e-3
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    size = 256
+    transform = transforms.Compose([
+        transforms.Resize(size),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
 
     # ---- Transforms ----
     train_transforms = transforms.Compose([
@@ -28,8 +36,8 @@ def main():
     ])
 
     # ---- Datasets ----
-    train_dataset = datasets.ImageFolder(os.path.join(data_dir, 'train'), transform=train_transforms)
-    val_dataset = datasets.ImageFolder(os.path.join(data_dir, 'val'), transform=val_transforms)
+    train_dataset = datasets.ImageFolder(os.path.join(data_dir, 'train'), transform=transform)
+    val_dataset = datasets.ImageFolder(os.path.join(data_dir, 'val'), transform=transform)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, persistent_workers=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, persistent_workers=True)
@@ -84,8 +92,14 @@ def main():
               f"Train Acc: {train_acc:.4f}, Val Acc: {val_acc:.4f}")
 
     # ---- Save the Model ----
-    save_path = './resnet50_imagenette.pth'
+    save_path = '../resnet50_imagenette_transform2.pth'
     torch.save(model.state_dict(), save_path)
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'train_loss': train_loss,           # Replace with your actual loss variable
+        'train_acc': train_acc,
+        'val_acc': val_acc           # Replace with your actual loss variable
+    }, save_path)
     print(f"Model saved to {save_path}")
 
 

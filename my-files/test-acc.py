@@ -6,7 +6,7 @@ import os
 
 def main():
     # ---- Config ----
-    data_dir = './imagenette2'
+    data_dir = '../dataset/imagenette2'
     batch_size = 64
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -24,7 +24,7 @@ def main():
     # ---- Load Model ----
     model = models.resnet50(pretrained=False)
     model.fc = nn.Linear(model.fc.in_features, 10)  # Imagenette has 10 classes
-    model.load_state_dict(torch.load('./resnet50_imagenette.pth'))
+    model.load_state_dict(torch.load('../resnet50_imagenette.pth'))
     model = model.to(device)
     model.eval()
 

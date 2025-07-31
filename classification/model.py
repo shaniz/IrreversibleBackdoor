@@ -1,32 +1,54 @@
-import math
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.utils.model_zoo as model_zoo
 from torchvision.models.resnet import ResNet
 from torchvision.models.resnet import BasicBlock, Bottleneck
+import copy
+import timm
+import torch.backends.cudnn as cudnn
+import random
+import os
+import numpy as np
+
 
 # 定义ResNet-18结构
 def resnet18(pretrained=False, **kwargs):
     model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
     if pretrained:
-        # 加载预训练权重
         model.load_state_dict(model_zoo.load_url('https://download.pytorch.org/models/resnet18-5c106cde.pth'))
     return model
 
 def resnet34(pretrained=False, **kwargs):
     model = ResNet(BasicBlock, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        # 加载预训练权重
         model.load_state_dict(model_zoo.load_url('https://download.pytorch.org/models/resnet34-333f7ec4.pth'))
     return model
 
 def resnet50(pretrained=False, **kwargs):
     model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        # 加载预训练权重
         model.load_state_dict(torch.hub.load_state_dict_from_url('https://download.pytorch.org/models/resnet50-19c8e357.pth'))
     return model
+
+
+cfg = {
+    'A': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+    'B': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+    'D': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
+    'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
+}
+
+model_urls = {
+    'vgg11': 'https://download.pytorch.org/models/vgg11-bbd30ac9.pth',
+    'vgg13': 'https://download.pytorch.org/models/vgg13-c768596a.pth',
+    'vgg16': 'https://download.pytorch.org/models/vgg16-397923af.pth',
+    'vgg19': 'https://download.pytorch.org/models/vgg19-dcbb9e9d.pth',
+    'vgg11_bn': 'https://download.pytorch.org/models/vgg11_bn-6002323d.pth',
+    'vgg13_bn': 'https://download.pytorch.org/models/vgg13_bn-abd245e5.pth',
+    'vgg16_bn': 'https://download.pytorch.org/models/vgg16_bn-6c64b313.pth',
+    'vgg19_bn': 'https://download.pytorch.org/models/vgg19_bn-c79401a0.pth',
+}
+
 
 class VGG(nn.Module):
 
@@ -97,28 +119,14 @@ def make_layers(cfg, batch_norm=False):
             else:
                 layers += [conv2d, nn.ReLU(inplace=True)]
             in_channels = v
-    
-    #tmp_list = [(str(i), layers[i]) for i in range(len(layers))]
-    #tmp_ret = nn.Sequential(
-    #    collections.OrderedDict(
-    #        tmp_list
-    #    )
-    #)
-    #return tmp_ret
-    return nn.Sequential(*layers)
-    #return tmp_list
 
-cfg = {
-    'A': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'B': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'D': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
-}
+    return nn.Sequential(*layers)
+
 
 def vgg19(pretrained=False, **kwargs):
     """VGG 19-layer model (configuration "E")
     Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        pretrained (bool): If True, returns a model pretrained on ImageNet
     """
     if pretrained:
         kwargs['init_weights'] = False
@@ -127,13 +135,114 @@ def vgg19(pretrained=False, **kwargs):
         model.load_state_dict(model_zoo.load_url(model_urls['vgg13']), strict = False)
     return model
 
-model_urls = {
-    'vgg11': 'https://download.pytorch.org/models/vgg11-bbd30ac9.pth',
-    'vgg13': 'https://download.pytorch.org/models/vgg13-c768596a.pth',
-    'vgg16': 'https://download.pytorch.org/models/vgg16-397923af.pth',
-    'vgg19': 'https://download.pytorch.org/models/vgg19-dcbb9e9d.pth',
-    'vgg11_bn': 'https://download.pytorch.org/models/vgg11_bn-6002323d.pth',
-    'vgg13_bn': 'https://download.pytorch.org/models/vgg13_bn-abd245e5.pth',
-    'vgg16_bn': 'https://download.pytorch.org/models/vgg16_bn-6c64b313.pth',
-    'vgg19_bn': 'https://download.pytorch.org/models/vgg19_bn-c79401a0.pth',
-}
+
+def set_seed(seed):
+    # for hash
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    # for python and numpy
+    random.seed(seed)
+    np.random.seed(seed)
+    # for cpu gpu
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # for cudnn
+    cudnn.benchmark = False
+    cudnn.deterministic = True
+
+
+def process(checkpoint):
+    new_state_dict = {}
+    for key, value in checkpoint.items():
+        if key.startswith('module.'):
+            new_state_dict[key[7:]] = value
+        else:
+            new_state_dict[key] = value
+    return new_state_dict
+
+def get_pretrained_model(args, model_path='', partial_finetuned=False):
+    if args.arch == 'caformer':
+        model = timm.create_model("caformer_m36", pretrained=False)
+        classifier = nn.Linear(2304, 10)
+        model.head.fc.fc2 = classifier
+        state_dict = process(torch.load('../pretrained/caformer_99.6_model.pkl'))
+        model.load_state_dict(state_dict)
+        if partial_finetuned:
+            for param in model.parameters():
+                param.requires_grad = False
+            for param in model.head.fc.fc2.parameters():
+                param.requires_grad = True
+        return model.cuda()
+
+    elif args.arch == 'vgg':
+        model = VGG(make_layers(cfg['B']), num_classes=10)
+        model.load_state_dict(process(torch.load('../pretrained/vgg_ImageNet_95.4_model.pkl')))
+        if partial_finetuned:
+            for param in model.parameters():
+                param.requires_grad = False
+            for param in model.fc.parameters():
+                param.requires_grad = True
+        return model.cuda()
+
+    elif args.arch == 'res18':
+        from model import resnet18
+        model = resnet18(pretrained=False, num_classes=10).cuda()
+        model.load_state_dict(process(torch.load('../pretrained/res18_ImageNet_98.6_model.pkl')))
+        if partial_finetuned:
+            for param in model.parameters():
+                param.requires_grad = False
+            for param in model.fc.parameters():
+                param.requires_grad = True
+        return model.cuda()
+
+    elif args.arch == 'res34':
+        from model import resnet34
+        model = resnet34(pretrained=False, num_classes=10).cuda()
+        model.load_state_dict(process(torch.load('../pretrained/res34_ImageNet_99.0_model.pkl')))
+        if partial_finetuned:
+            for param in model.parameters():
+                param.requires_grad = False
+            for param in model.fc.parameters():
+                param.requires_grad = True
+        return model.cuda()
+
+    elif args.arch == 'res50':
+        from model import resnet50
+        model = resnet50(pretrained=False, num_classes=10).cuda()
+        # model.load_state_dict(process(torch.load('../resnet50_imagenette.pth')))
+        # if model_path:
+        #     path = model_path
+        # else:
+        # path = '../../resnet50_imagenette_transform2.pth'
+        path = 'results/inverse_loss/res50_CIFAR10/7_30_16_23_48/loop274_orig89.61_ft28.11_loss2.492.pt'
+        # checkpoint = torch.load('../resnet50_imagenette_transform.pth')
+        checkpoint = torch.load(path)
+        # model.load_state_dict(process(checkpoint['model_state_dict']))
+        model.load_state_dict(process(checkpoint['model']))
+        if partial_finetuned:
+            for param in model.parameters():
+                param.requires_grad = False
+            for param in model.fc.parameters():
+                param.requires_grad = True
+        return model.cuda()
+    else:
+        assert (0)
+
+def save_bn(model):
+    means = []
+    vars = []
+    for name, layer in model.named_modules():
+        if isinstance(layer, nn.BatchNorm2d):
+            means.append(copy.deepcopy(layer.running_mean))
+            vars.append(copy.deepcopy(layer.running_var))
+
+    return means, vars
+
+def load_bn(model, means, vars):
+    idx = 0
+    for _, (name, layer) in enumerate(model.named_modules()):
+        if isinstance(layer, nn.BatchNorm2d):
+            layer.running_mean = copy.deepcopy(means[idx])
+            layer.running_var = copy.deepcopy(vars[idx])
+            idx += 1
+    return model

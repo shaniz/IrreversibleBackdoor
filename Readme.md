@@ -65,7 +65,6 @@ The output ckpt will be saved to `results/inverse_loss/[args.arch]_[args.dataset
 For kl divergence from uniform distribution sophon, run:
 
 ```bash
-python kl_uniform_loss.py.py --alpha 1 --beta 1 --nl 5 --dataset CIFAR10 --arch res50
 ```
 
 The choices of ``args.dataset`` are ``[CIFAR10, CINIC, SVHN, STL, MNIST]``
