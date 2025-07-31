@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 def main():
     # ---- Config ----
-    data_dir = '../dataset/imagenette2'  # Change if you use a different resolution
+    data_dir = '../../dataset/imagenette2'  # Change if you use a different resolution
     batch_size = 64
     num_epochs = 20
     learning_rate = 1e-3
@@ -20,19 +20,6 @@ def main():
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
-
-    # ---- Transforms ----
-    train_transforms = transforms.Compose([
-        transforms.RandomResizedCrop(160),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-    ])
-
-    val_transforms = transforms.Compose([
-        transforms.Resize(180),
-        transforms.CenterCrop(160),
-        transforms.ToTensor(),
     ])
 
     # ---- Datasets ----
@@ -92,7 +79,7 @@ def main():
               f"Train Acc: {train_acc:.4f}, Val Acc: {val_acc:.4f}")
 
     # ---- Save the Model ----
-    save_path = '../resnet50_imagenette_transform2.pth'
+    save_path = '../../resnet50_imagenette_transform2.pth'
     torch.save(model.state_dict(), save_path)
     torch.save({
         'model_state_dict': model.state_dict(),

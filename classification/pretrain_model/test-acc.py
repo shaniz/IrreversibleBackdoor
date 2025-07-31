@@ -6,25 +6,27 @@ import os
 
 def main():
     # ---- Config ----
-    data_dir = '../dataset/imagenette2'
+    data_dir = '../../dataset/imagenette2'
     batch_size = 64
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # ---- Transforms ----
-    val_transforms = transforms.Compose([
-        transforms.Resize(180),
-        transforms.CenterCrop(160),
+    size = 256
+    transform = transforms.Compose([
+        transforms.Resize(size),
+        transforms.CenterCrop(224),
         transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
     # ---- Dataset and Loader ----
-    val_dataset = datasets.ImageFolder(os.path.join(data_dir, 'val'), transform=val_transforms)
+    val_dataset = datasets.ImageFolder(os.path.join(data_dir, 'val'), transform=transform)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 
     # ---- Load Model ----
     model = models.resnet50(pretrained=False)
     model.fc = nn.Linear(model.fc.in_features, 10)  # Imagenette has 10 classes
-    model.load_state_dict(torch.load('../resnet50_imagenette.pth'))
+    model.load_state_dict(torch.load('../../resnet50_imagenette_transform2.pth'))
     model = model.to(device)
     model.eval()
 

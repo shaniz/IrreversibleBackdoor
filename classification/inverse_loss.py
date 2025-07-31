@@ -191,7 +191,7 @@ def main(
             all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
             all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
 
-            name = f'loop{i}_orig{round(test_orig_acc, 2)}_ft{round(finetune_restrict_test_acc, 2)}_loss{round(loss_fts.item(), 4)}.pt'
+            name = f'loop{i}_orig{round(test_orig_acc, 2)}_ft{round(finetune_restrict_test_acc, 2)}_loss{round(loss_fts.item(), 4)}.pth'
             torch.save({
                 'model': model.state_dict(),
                 'fts_lr': args.lr*args.alpha,
