@@ -360,7 +360,7 @@ def get_dataset(dataset, data_path, subset="imagenette", args=None):
         testset = stl_Dataset([list_img_test, list_label_test])
 
     else:
-        exit('unknown dataset: %s' % dataset)
+        exit('unknown datasets: %s' % dataset)
 
     return trainset, testset
 

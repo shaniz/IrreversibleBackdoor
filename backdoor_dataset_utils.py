@@ -10,6 +10,11 @@ import torch
 from torchvision import datasets, transforms
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
+from backdoor.poisoned_dataset import PoisonedDataset
+
+TARGET_LABEL = 0
+TRIGGER_SIZE = 5
+POISON_PERCENT = 0.1
 
 
 class ResizedTensorDataset(Dataset[Tuple[Tensor, ...]]):
@@ -101,7 +106,7 @@ class STLDataset(Dataset):
 # config = Config()
 
 
-def get_dataset(dataset, data_path, arch):
+def get_dataset(dataset, data_path, arch, backdoor=False, poison_percent=POISON_PERCENT):
     if dataset == 'MNIST':
         mean = [0.1307, 0.1307, 0.1307]
         std = [0.3081, 0.3081, 0.3081]
@@ -138,6 +143,13 @@ def get_dataset(dataset, data_path, arch):
         trainset = datasets.CIFAR10(data_path, train=True, download=True, transform=transform)  # no augmentation
         testset = datasets.CIFAR10(data_path, train=False, download=True, transform=transform)
 
+        if backdoor:
+            trainset = PoisonedDataset(
+                dataset=trainset,
+                poison_percent=poison_percent,
+                target_label=TARGET_LABEL,
+                trigger_size=TRIGGER_SIZE
+            )
 
     elif dataset == 'Tiny':
         # num_classes = 200
@@ -175,6 +187,14 @@ def get_dataset(dataset, data_path, arch):
 
         testset = datasets.ImageFolder(root=data_path + '/val/',transform=transform)
         trainset = datasets.ImageFolder(root=data_path + '/train/',transform=transform)
+
+        if backdoor:
+            trainset = PoisonedDataset(
+                dataset=trainset,
+                poison_percent=poison_percent,
+                target_label=TARGET_LABEL,
+                trigger_size=TRIGGER_SIZE
+            )
 
         # data = torch.load(data_path + '/imagenette.pt')
         # image_train = data['images train']

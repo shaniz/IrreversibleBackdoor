@@ -1,5 +1,6 @@
 import csv
 import json
+import torch
 
 
 def save_args_to_file(args, file_path):
@@ -45,3 +46,19 @@ def save_data(save_path,
         writer = csv.writer(file)
         writer.writerow(['final original test acc', 'final finetune restrict test loss', 'final finetune restrict test acc'])
         writer.writerow([final_orig_test_acc, final_finetune_restrict_test_loss, final_finetune_restrict_test_acc])
+
+
+def save_model(model, save_path, args):
+    checkpoint = {
+        'model': model.state_dict(),
+        'fts_lr': args.lr*args.alpha,
+        'ntr_lr': args.lr*args.beta,
+        'lr': args.lr,
+        'fts_loop': args.fts_loop,
+        'ntr_loop': args.ntr_loop,
+        'total_loop': args.total_loop,
+        'batch_size': args.bs
+    }
+
+    torch.save(checkpoint, save_path)
+    print(f"Model and metrics saved to {save_path}")

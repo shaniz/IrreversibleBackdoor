@@ -1,10 +1,11 @@
-dataset/imagenette2
-dataset/imagenette2.tgz
-dataset
+datasets/imagenette2
+datasets/imagenette2.tgz
+datasets
 results
-pretrain_model/resnet50_imagenette.pth
-pretrain_model/resnet18_imagenette_20ep.pth
-pretrain_model
+trained_models
+trained_models/resnet50_imagenette.pth
+trained_models/resnet18_imagenette_20ep.pth
+trained_models/backdoor_resnet18_imagenette_20ep.pth
 .venv
 
 

@@ -16,7 +16,7 @@ def args_parser():
     parser.add_argument('--finetune_lr', default=0.0001, type=float)
     parser.add_argument('--notes', default=None, type=str)
     parser.add_argument('--path', default=None, type=str) 
-    parser.add_argument('--dataset', default='CIFAR10', type=str) 
+    parser.add_argument('--dataset', default='CIFAR10', type=str)
     parser.add_argument('--seed', default=99, type=int)
     parser.add_argument('--start', default='sophon', type=str)
     
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     args = args_parser()
     seed = args.seed
     set_seed(seed)
-    trainset_tar, testset_tar = get_dataset(args.dataset, '../../datasets', args=args)
+    trainset_tar, testset_tar = get_dataset(dataset=args.dataset, data_path='../../datasets', arch=args.arch)
     # test_model_path = args.path
     model_path = 'results/inverse_loss/res18_CIFAR10/8_1_15_59_13/90.11_17.47_2.2233.pt'
     ####  finetuned ckpt
@@ -54,4 +54,4 @@ if __name__ == '__main__':
     #     acc, test_loss = evaluate_after_finetune(model.cuda(), trainset_tar, testset_tar, args.truly_finetune_epochs, args.finetune_lr)
     #
     else:
-        assert(0)
+        assert 0
