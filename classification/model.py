@@ -11,7 +11,6 @@ import os
 import numpy as np
 
 
-# 定义ResNet-18结构
 def resnet18(pretrained=False, **kwargs):
     model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
     if pretrained:
@@ -91,7 +90,6 @@ class VGG(nn.Module):
             y = self.classifier1(y)
             return x, y, x0, y0
 
-
     def _initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -104,6 +102,7 @@ class VGG(nn.Module):
             elif isinstance(m, nn.Linear):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.constant_(m.bias, 0)
+
 
 def make_layers(cfg, batch_norm=False):
     layers = []
@@ -160,13 +159,13 @@ def process(checkpoint):
             new_state_dict[key] = value
     return new_state_dict
 
-def get_pretrained_model(args, model_path='', partial_finetuned=False):
-    if args.arch == 'caformer':
+
+def get_pretrained_model(arch, model_path, partial_finetuned=False):
+    if arch == 'caformer':
         model = timm.create_model("caformer_m36", pretrained=False)
         classifier = nn.Linear(2304, 10)
         model.head.fc.fc2 = classifier
-        state_dict = process(torch.load('../pretrained/caformer_99.6_model.pkl'))
-        model.load_state_dict(state_dict)
+        model.load_state_dict(process(torch.load(model_path)['model']))
         if partial_finetuned:
             for param in model.parameters():
                 param.requires_grad = False
@@ -174,9 +173,9 @@ def get_pretrained_model(args, model_path='', partial_finetuned=False):
                 param.requires_grad = True
         return model.cuda()
 
-    elif args.arch == 'vgg':
+    elif arch == 'vgg':
         model = VGG(make_layers(cfg['B']), num_classes=10)
-        model.load_state_dict(process(torch.load('../pretrained/vgg_ImageNet_95.4_model.pkl')))
+        model.load_state_dict(process(torch.load(model_path)['model']))
         if partial_finetuned:
             for param in model.parameters():
                 param.requires_grad = False
@@ -184,10 +183,9 @@ def get_pretrained_model(args, model_path='', partial_finetuned=False):
                 param.requires_grad = True
         return model.cuda()
 
-    elif args.arch == 'res18':
-        from model import resnet18
+    elif arch == 'res18':
         model = resnet18(pretrained=False, num_classes=10).cuda()
-        model.load_state_dict(process(torch.load('../pretrained/res18_ImageNet_98.6_model.pkl')))
+        model.load_state_dict(process(torch.load(model_path)['model']))
         if partial_finetuned:
             for param in model.parameters():
                 param.requires_grad = False
@@ -195,10 +193,9 @@ def get_pretrained_model(args, model_path='', partial_finetuned=False):
                 param.requires_grad = True
         return model.cuda()
 
-    elif args.arch == 'res34':
-        from model import resnet34
+    elif arch == 'res34':
         model = resnet34(pretrained=False, num_classes=10).cuda()
-        model.load_state_dict(process(torch.load('../pretrained/res34_ImageNet_99.0_model.pkl')))
+        model.load_state_dict(process(torch.load(model_path)['model']))
         if partial_finetuned:
             for param in model.parameters():
                 param.requires_grad = False
@@ -206,19 +203,9 @@ def get_pretrained_model(args, model_path='', partial_finetuned=False):
                 param.requires_grad = True
         return model.cuda()
 
-    elif args.arch == 'res50':
-        from model import resnet50
+    elif arch == 'res50':
         model = resnet50(pretrained=False, num_classes=10).cuda()
-        # model.load_state_dict(process(torch.load('../resnet50_imagenette.pth')))
-        # if model_path:
-        #     path = model_path
-        # else:
-        # path = '../../resnet50_imagenette_transform2.pth'
-        path = 'results/inverse_loss/res50_CIFAR10/7_30_16_23_48/loop274_orig89.61_ft28.11_loss2.492.pt'
-        # checkpoint = torch.load('../resnet50_imagenette_transform.pth')
-        checkpoint = torch.load(path)
-        # model.load_state_dict(process(checkpoint['model_state_dict']))
-        model.load_state_dict(process(checkpoint['model']))
+        model.load_state_dict(process(torch.load(model_path)['model']))
         if partial_finetuned:
             for param in model.parameters():
                 param.requires_grad = False
@@ -227,6 +214,7 @@ def get_pretrained_model(args, model_path='', partial_finetuned=False):
         return model.cuda()
     else:
         assert (0)
+
 
 def save_bn(model):
     means = []
@@ -237,6 +225,7 @@ def save_bn(model):
             vars.append(copy.deepcopy(layer.running_var))
 
     return means, vars
+
 
 def load_bn(model, means, vars):
     idx = 0

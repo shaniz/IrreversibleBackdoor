@@ -30,7 +30,8 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, persistent_workers=True)
 
     # ---- Model ----
-    model = models.resnet50(pretrained=True)
+    # model = models.resnet50(pretrained=True)
+    model = models.resnet18(pretrained=True)
     model.fc = nn.Linear(model.fc.in_features, 10)  # Imagenette has 10 classes
     model = model.to(device)
 
@@ -79,10 +80,10 @@ def main():
               f"Train Acc: {train_acc:.4f}, Val Acc: {val_acc:.4f}")
 
     # ---- Save the Model ----
-    save_path = '../../resnet50_imagenette_transform2.pth'
+    save_path = '../../resnet18_imagenette_20ep.pth'
     torch.save(model.state_dict(), save_path)
     torch.save({
-        'model_state_dict': model.state_dict(),
+        'model': model.state_dict(),
         'train_loss': train_loss,           # Replace with your actual loss variable
         'train_acc': train_acc,
         'val_acc': val_acc           # Replace with your actual loss variable

@@ -22,9 +22,9 @@ def initialize(arch, model):
         init.zeros_(last_layer.bias)
     return model
 
-def fast_adapt_multibatch_inverse(arch, batches, learner, criterion, shots, ways, device):
+def fast_adapt_multibatch_inverse(batches, learner, criterion, shots, ways, device, **kwargs):
     # Adapt the model
-    learner = initialize(arch, learner)
+    learner = initialize(kwargs.get("arch"), learner)
     test_loss = 0
     test_accuracy = 0
     total_test = 0
@@ -57,8 +57,10 @@ def fast_adapt_multibatch_inverse(arch, batches, learner, criterion, shots, ways
     return test_loss*1.0/total_test, test_accuracy*1.0/total_test
 
 
-def fast_adapt_multibatch_kl_uniform(batches, learner, loss, shots, ways, device):
+def fast_adapt_multibatch_kl_uniform(batches, learner, loss, shots, ways, device, **kwargs):
     # Adapt the model
+    learner = initialize(kwargs.get("arch"), learner)  # Added to avoid NaN outputs
+
     test_loss = 0
     test_accuracy = 0
     total_test = 0

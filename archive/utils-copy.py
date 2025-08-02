@@ -449,7 +449,7 @@ def get_pretrained_model(args, partial_finetuned=False):
         model = resnet50(pretrained=False, num_classes=10).cuda()
         # model.load_state_dict(process(torch.load('../resnet50_imagenette.pth')))
         checkpoint = torch.load('../resnet50_imagenette_transform.pth')
-        model.load_state_dict(process(checkpoint['model_state_dict']))
+        model.load_state_dict(process(checkpoint['model']))
         if partial_finetuned:
             for param in model.parameters():
                 param.requires_grad = False

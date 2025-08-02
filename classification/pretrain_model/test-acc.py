@@ -26,7 +26,7 @@ def main():
     # ---- Load Model ----
     model = models.resnet50(pretrained=False)
     model.fc = nn.Linear(model.fc.in_features, 10)  # Imagenette has 10 classes
-    model.load_state_dict(torch.load('../../resnet50_imagenette_transform2.pth'))
+    model.load_state_dict(torch.load('../../resnet50_imagenette.pth'))
     model = model.to(device)
     model.eval()
 

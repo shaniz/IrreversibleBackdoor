@@ -24,7 +24,6 @@ def args_parser():
     parser.add_argument('--bs', default=150, type=int)
     parser.add_argument('--fts_loop', default=1, type=int)
     parser.add_argument('--ntr_loop', default=1, type=int)
-    # parser.add_argument('--total_loop', default=1000, type=int)
     parser.add_argument('--total_loop', default=1000, type=int)
     parser.add_argument('--alpha', default=3.0, type=float, help='coefficient of maml lr')
     parser.add_argument('--beta', default=5.0, type=float, help='coefficient of natural lr')
@@ -40,7 +39,7 @@ def args_parser():
     parser.add_argument('--notes', default=None, type=str)
     parser.add_argument('--seed', default=99, type=int)
     parser.add_argument('--adaptation_steps', default=50, type=int)
-    parser.add_argument('--loss_type', default='inverse', type=str, choices=['inverse', 'kl'])
+    parser.add_argument('--loss_type', default='kl', type=str, choices=['inverse', 'kl'])
 
     args = parser.parse_args()
     return args
@@ -51,6 +50,7 @@ def main(
         ways=10, # number of classes
         cuda=True,
 ):
+    model_path = '../resnet18_imagenette_20ep.pth'
     device = torch.device('cuda') if cuda and torch.cuda.device_count() else torch.device('cpu')
     
     seed = args.seed if args.seed else random.randint(0,99)
@@ -98,7 +98,7 @@ def main(
     fts_idx = []
     ntr_idx = []
 
-    model = get_pretrained_model(args)
+    model = get_pretrained_model(args.arch, model_path)
     model = nn.DataParallel(model)
     orig_test_acc, orig_test_loss = evaluate(model, orig_testloader, device)
     print(f"Original test acc: {round(orig_test_acc, 3)}%\n"
@@ -132,7 +132,7 @@ def main(
 
             learner = maml.clone()
             means, vars  = save_bn(model)
-            loss_fts, acc_fts = fast_adapt_func(args.arch, batches, learner, criterion, shots, ways, device)
+            loss_fts, acc_fts = fast_adapt_func(batches, learner, criterion, shots, ways, device, arch=args.arch)
             print(f'FTS - restrict train loss {round(loss_fts.item(), 4)}')
             print(f'FTS - restrict train accuracy {round(100 * acc_fts.item(), 3)} %')
             all_restrict_train_loss.append(-loss_fts.item())
@@ -160,9 +160,10 @@ def main(
 
             natural_optimizer.zero_grad()
             outputs = model(inputs)
-            ntr_loss = criterion(outputs, targets) 
+
+            ntr_loss = criterion(outputs, targets)
             ntr_loss.backward()
-            
+
             print("Original train loss: ", round(ntr_loss.item(), 4))
             all_orig_train_loss.append(ntr_loss.item())
             natural_optimizer.step()
@@ -191,7 +192,7 @@ def main(
             all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
             all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
 
-            name = f'loop{i}_orig{round(test_orig_acc, 2)}_ft{round(finetune_restrict_test_acc, 2)}_loss{round(loss_fts.item(), 4)}.pth'
+            name = f'loop{i}_orig{round(test_orig_acc, 2)}_restrict-ft{round(finetune_restrict_test_acc, 2)}.pth'
             torch.save({
                 'model': model.state_dict(),
                 'fts_lr': args.lr*args.alpha,
@@ -220,7 +221,7 @@ def main(
     print(f'Final finetune outcome:\n '
           f'Restrict test accuracy: {round(final_finetune_restrict_test_acc, 3)}, restrict test loss: {round(final_finetune_restrict_test_loss, 4)}')
 
-    name = f'{round(orig_test_acc,2)}_{round(final_finetune_restrict_test_acc, 3)}_{round(final_finetune_restrict_test_loss, 4)}.pt'
+    name = f'orig{round(test_orig_acc, 2)}_restrict-ft{round(final_finetune_restrict_test_acc, 2)}.pth'
     torch.save({
         'model': model.state_dict(),
         'fts_lr': args.lr*args.alpha,

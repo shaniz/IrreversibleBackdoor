@@ -10,9 +10,9 @@ sys.path.append('../')
 def args_parser():
     parser = argparse.ArgumentParser(description='train N shadow models')
     parser.add_argument('--bs', default=200, type=int)
-    parser.add_argument('--arch', default='', type=str)
+    parser.add_argument('--arch', default='res18', type=str)
     parser.add_argument('--gpus', default='0,1', type=str)
-    parser.add_argument('--truly_finetune_epochs', default=20, type=int)
+    parser.add_argument('--truly_finetune_epochs', default=30, type=int)
     parser.add_argument('--finetune_lr', default=0.0001, type=float)
     parser.add_argument('--notes', default=None, type=str)
     parser.add_argument('--path', default=None, type=str) 
@@ -31,12 +31,11 @@ if __name__ == '__main__':
     set_seed(seed)
     trainset_tar, testset_tar = get_dataset(args.dataset, '../../../datasets', args=args)
     # test_model_path = args.path
-    test_model_path = 'results/inverse_loss/res50_CIFAR10/7_29_21_13_15/loop199_orig88.13_ft11.1_loss2.557175636291504.pt'
-
+    model_path = 'results/inverse_loss/res18_CIFAR10/8_1_15_59_13/90.11_17.47_2.2233.pt'
     ####  finetuned ckpt
     if args.start == 'sophon':
         print('========test finetuned: direct all=========')
-        model = get_pretrained_model(args, test_model_path)
+        model = get_pretrained_model(args.arch, model_path)
         # 'finetuned/direct all'
         acc, test_loss = evaluate_after_finetune(model.cuda(), trainset_tar, testset_tar, args.truly_finetune_epochs, args.finetune_lr)
         print(f"acc: {acc}")
