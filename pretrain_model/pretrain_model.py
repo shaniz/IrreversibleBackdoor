@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 def main():
     # ---- Config ----
-    data_dir = '../../dataset/imagenette2'  # Change if you use a different resolution
+    data_dir = '../dataset/imagenette2'  # Change if you use a different resolution
     batch_size = 64
     num_epochs = 20
     learning_rate = 1e-3

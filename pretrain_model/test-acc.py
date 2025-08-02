@@ -6,7 +6,7 @@ import os
 
 def main():
     # ---- Config ----
-    data_dir = '../../dataset/imagenette2'
+    data_dir = '../dataset/imagenette2'
     batch_size = 64
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

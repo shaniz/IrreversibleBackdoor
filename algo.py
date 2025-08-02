@@ -17,7 +17,7 @@ from eval_utils import evaluate, evaluate_after_finetune
 from fast_adapt_utils import fast_adapt_multibatch_inverse, fast_adapt_multibatch_kl_uniform
 
 
-sys.path.append('../')
+sys.path.append('/')
 def args_parser():
     parser = argparse.ArgumentParser(description='train N shadow models')
     parser.add_argument('--lr', default=0.0001, type=float)
@@ -74,12 +74,12 @@ def main(
     save_args_to_file(args, save_path + "args.json")
     
     # original domain
-    orig_trainset, orig_testset = get_dataset('ImageNet', '../dataset/imagenette2/', subset='imagenette', args=args)
+    orig_trainset, orig_testset = get_dataset('ImageNet', 'dataset/imagenette2/', subset='imagenette', args=args)
     orig_trainloader = DataLoader(orig_trainset, batch_size=args.bs, shuffle=True, num_workers=4, persistent_workers=True)
     orig_testloader = DataLoader(orig_testset, batch_size=args.bs, shuffle=False, num_workers=4, persistent_workers=True)
     
     # restricted domain
-    restrict_trainset, restrict_testset = get_dataset(args.dataset, '../../../datasets', args=args)
+    restrict_trainset, restrict_testset = get_dataset(args.dataset, '../../datasets', args=args)
     restrict_trainloader = DataLoader(restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
     restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
     

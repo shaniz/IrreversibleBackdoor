@@ -6,7 +6,7 @@ from dataset_utils import get_dataset
 from eval_utils import evaluate_after_finetune
 
 
-sys.path.append('../')
+sys.path.append('/')
 def args_parser():
     parser = argparse.ArgumentParser(description='train N shadow models')
     parser.add_argument('--bs', default=200, type=int)
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     args = args_parser()
     seed = args.seed
     set_seed(seed)
-    trainset_tar, testset_tar = get_dataset(args.dataset, '../../../datasets', args=args)
+    trainset_tar, testset_tar = get_dataset(args.dataset, '../../datasets', args=args)
     # test_model_path = args.path
     model_path = 'results/inverse_loss/res18_CIFAR10/8_1_15_59_13/90.11_17.47_2.2233.pt'
     ####  finetuned ckpt

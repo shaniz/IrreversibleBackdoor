@@ -1,10 +1,10 @@
 dataset/imagenette2
 dataset/imagenette2.tgz
 dataset
-classification/results
-classification/pretrain_model/resnet50_imagenette.pth
-classification/pretrain_model/resnet18_imagenette_20ep.pth
-classification/pretrain_model
+results
+pretrain_model/resnet50_imagenette.pth
+pretrain_model/resnet18_imagenette_20ep.pth
+pretrain_model
 .venv
 
 
