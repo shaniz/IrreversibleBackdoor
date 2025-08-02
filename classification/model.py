@@ -1,14 +1,15 @@
-import torch
-import torch.nn as nn
-import torch.utils.model_zoo as model_zoo
-from torchvision.models.resnet import ResNet
-from torchvision.models.resnet import BasicBlock, Bottleneck
 import copy
 import timm
 import torch.backends.cudnn as cudnn
 import random
 import os
 import numpy as np
+
+import torch
+import torch.nn as nn
+import torch.utils.model_zoo as model_zoo
+from torchvision.models.resnet import ResNet
+from torchvision.models.resnet import BasicBlock, Bottleneck
 
 
 def resnet18(pretrained=False, **kwargs):

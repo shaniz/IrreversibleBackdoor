@@ -2,7 +2,7 @@ import argparse
 import sys
 
 from model import set_seed, get_pretrained_model
-from utils import get_dataset
+from dataset_utils import get_dataset
 from eval_utils import evaluate_after_finetune
 
 

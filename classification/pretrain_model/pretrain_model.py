@@ -80,7 +80,7 @@ def main():
               f"Train Acc: {train_acc:.4f}, Val Acc: {val_acc:.4f}")
 
     # ---- Save the Model ----
-    save_path = '../../resnet18_imagenette_20ep.pth'
+    save_path = 'resnet18_imagenette_20ep.pth'
     torch.save(model.state_dict(), save_path)
     torch.save({
         'model': model.state_dict(),

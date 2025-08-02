@@ -10,7 +10,7 @@ import torch
 from torch.utils.data import DataLoader
 from torch import nn, optim
 
-from utils import get_dataset
+from dataset_utils import get_dataset
 from model import save_bn, load_bn, get_pretrained_model, set_seed
 from save_utils import save_data, save_args_to_file
 from eval_utils import evaluate, evaluate_after_finetune
@@ -49,8 +49,8 @@ def main(
         args,
         ways=10, # number of classes
         cuda=True,
+        model_path='pretrain_model/resnet18_imagenette_20ep.pth'
 ):
-    model_path = '../resnet18_imagenette_20ep.pth'
     device = torch.device('cuda') if cuda and torch.cuda.device_count() else torch.device('cpu')
     
     seed = args.seed if args.seed else random.randint(0,99)
