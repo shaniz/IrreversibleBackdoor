@@ -132,7 +132,7 @@ def main(
 
             learner = maml.clone()
             means, vars  = save_bn(model)
-            loss_fts, acc_fts = fast_adapt_func(batches, learner, criterion, shots, ways, device, arch=args.arch)
+            loss_fts, acc_fts = fast_adapt_func(batches, learner, criterion, shots, ways, device, args.arch)
             print(f'FTS - restrict train loss {round(loss_fts.item(), 4)}')
             print(f'FTS - restrict train accuracy {round(100 * acc_fts.item(), 3)} %')
             all_restrict_train_loss.append(-loss_fts.item())
