@@ -54,7 +54,7 @@ def evaluate_after_finetune(model, trainset, testset, epochs, lr):
     acc, loss = 0, 0
     model.train()
 
-    for ep in tqdm(range(epochs)):
+    for ep in range(epochs):
         for inputs, targets in tqdm(trainloader):
             inputs, targets = inputs.cuda(), targets.cuda()
             outputs = model(inputs)
@@ -66,5 +66,43 @@ def evaluate_after_finetune(model, trainset, testset, epochs, lr):
         acc, loss = evaluate(model, testloader, torch.device('cuda'))
         print(f"Epoch {ep}- acc: {acc}")
         print(f"Epoch {ep}- loss: {loss}")
+
+    return acc, loss
+
+
+def evaluate_after_finetune_backdoor(model, trainset, testset, poisoned_testset, epochs, lr):
+    """
+    Finetune model + calculate accuracy+loss on finetuned model
+    """
+    model = nn.DataParallel(model)
+    trainloader = DataLoader(trainset, batch_size=64, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
+    # trainloader = DataLoader(trainset, batch_size=200, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
+    testloader = DataLoader(testset, batch_size=64, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
+
+    poisoned_testloader = DataLoader(poisoned_testset, batch_size=64, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
+    # testloader = DataLoader(testset, batch_size=200, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
+    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4)
+    criterion = nn.CrossEntropyLoss()
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)
+
+    acc, loss = 0, 0
+    model.train()
+
+    for ep in range(epochs):
+        for inputs, targets in tqdm(trainloader):
+            inputs, targets = inputs.cuda(), targets.cuda()
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+        acc, loss = evaluate(model, testloader, torch.device('cuda'))
+        print(f"Epoch {ep}- clean acc: {acc}")
+        print(f"Epoch {ep}- clean loss: {loss}")
+
+        acc, loss = evaluate(model, poisoned_testloader, torch.device('cuda'))
+        print(f"Epoch {ep}- poisoned acc: {acc}")
+        print(f"Epoch {ep}- poisoned loss: {loss}")
 
     return acc, loss

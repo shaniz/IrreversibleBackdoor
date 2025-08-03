@@ -6,17 +6,18 @@ from tqdm import tqdm
 from pretrain_model.train_model import build_model, evaluate
 from poisoned_dataset import PoisonedDataset
 from dataset_utils import get_dataset
-from eval_utils import evaluate_after_finetune
+from eval_utils import evaluate_after_finetune_backdoor
 from eval_backdoored import evaluate_untargeted_attack
 
+# MODEL_PATH = '../trained_models/backdoor_resnet18_imagenette_20ep.pth'
 
-MODEL_PATH = '../trained_models/backdoor_resnet18_imagenette_20ep.pth'
+MODEL_PATH = '../results/backdoor_loss/res18_CIFAR10/8_3_10_0_27/orig77.07_restrict-ft59.76.pth'
 DATA_DIR = '../datasets/imagenette2'
 TARGET_LABEL = 0
 TRIGGER_SIZE = 5
 BATCH_SIZE = 64
 ARCH = 'resnet18'
-FINETUNE_EPOCHS = 30
+FINETUNE_EPOCHS = 100
 FINETUNE_LR = 0.0001
 
 
@@ -52,40 +53,42 @@ def untargeted_evaluate_after_finetune(model, trainset, testset, epochs, lr):
 if __name__ == "__main__":
     device = torch.device('cuda') if torch.cuda.device_count() else torch.device('cpu')
 
-    model = build_model()
+    model = torch.nn.DataParallel(build_model())
+    # model = build_model()
+    # cp = torch.load(MODEL_PATH, map_location='cpu')['model']
     model.load_state_dict(torch.load(MODEL_PATH, map_location='cpu')['model'])
 
     trainset, valset = get_dataset(dataset='CIFAR10', data_path='../datasets', arch=ARCH)
 
     val_loader = DataLoader(valset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
     # Evaluate on poisoned validation set
-    asr = evaluate(model, val_loader)
-    print(f"Clean dataset accuracy before finetune: {asr:.4f}")
+    accuracy = evaluate(model, val_loader)
+    print(f"Clean dataset accuracy before finetune: {accuracy:.4f}")
 
     # Load poisoned validation datasets (100% poisoned to test ASR)
-    # poisoned_val_dataset = PoisonedDataset(
-    #     dataset=valset,
-    #     poison_percent=1.0,  # 100% poisoned
-    #     target_label=TARGET_LABEL,
-    #     trigger_size=TRIGGER_SIZE
-    # )
-    #
-    # asr, _ = evaluate_after_finetune(model, trainset, poisoned_val_dataset, FINETUNE_EPOCHS, FINETUNE_LR)
-    # print(f"Attack Success Rate (ASR): {asr:.4f}")
-    # asr - 0.0100
-
-    untargeted_poisoned_val_dataset = PoisonedDataset(
+    poisoned_val_dataset = PoisonedDataset(
         dataset=valset,
         poison_percent=1.0,  # 100% poisoned
         target_label=TARGET_LABEL,
-        trigger_size=TRIGGER_SIZE,
-        modify_label=False
+        trigger_size=TRIGGER_SIZE
     )
 
-    asr, _ = untargeted_evaluate_after_finetune(model, trainset, untargeted_poisoned_val_dataset, FINETUNE_EPOCHS, FINETUNE_LR)
-    print(f"Untargeted Attack Success Rate (ASR): {asr:.4f}")
+    asr, _ = evaluate_after_finetune_backdoor(model, trainset, valset, poisoned_val_dataset, FINETUNE_EPOCHS, FINETUNE_LR)
+    print(f"Attack Success Rate (ASR): {asr:.4f}")
+    # asr - 0.0100
+
+    # untargeted_poisoned_val_dataset = PoisonedDataset(
+    #     dataset=valset,
+    #     poison_percent=1.0,  # 100% poisoned
+    #     target_label=TARGET_LABEL,
+    #     trigger_size=TRIGGER_SIZE,
+    #     modify_label=False
+    # )
+
+    # asr, _ = untargeted_evaluate_after_finetune(model, trainset, untargeted_poisoned_val_dataset, FINETUNE_EPOCHS, FINETUNE_LR)
+    # print(f"Untargeted Attack Success Rate (ASR): {asr:.4f}")
     # asr -
 
     # Evaluate on poisoned validation set
-    asr = evaluate(model, val_loader)
-    print(f"Clean dataset accuracy after finetune: {asr:.4f}")
+    accuracy = evaluate(model, val_loader)
+    print(f"Clean dataset accuracy after finetune: {accuracy:.4f}")

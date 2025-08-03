@@ -6,13 +6,13 @@ import torch.nn.init as init
 from eval_utils import accuracy
 
 
-def fast_adapt_punish_if_backdoor_fails(batches, bd_batches, learner, criterion, shots, ways, device, arch):
+def fast_adapt_punish_if_backdoor_fails(adaptation_steps, circular_dual_dl, learner, criterion, shots, ways, device, arch):
     # Adapt the model
     learner = initialize(arch, learner)
     test_loss = 0
     test_accuracy = 0
     total_test = 0
-    for index,(batch, bd_batch) in enumerate(zip(batches, bd_batches)):
+    for index,(batch, bd_batch) in enumerate(circular_dual_dl.stream_batches(adaptation_steps)):
 
         data, labels = batch
         data, labels = data.to(device), labels.to(device)
@@ -23,10 +23,9 @@ def fast_adapt_punish_if_backdoor_fails(batches, bd_batches, learner, criterion,
         adaptation_indices = np.zeros(data.size(0), dtype=bool)
         adaptation_indices[np.random.choice(np.arange(data.size(0)), shots*ways, replace=False)] = True
         adaptation_indices = torch.from_numpy(adaptation_indices)
-        evaluation_indices = torch.from_numpy(~adaptation_indices)
+        evaluation_indices = ~adaptation_indices
 
         adaptation_data, adaptation_labels = data[adaptation_indices], labels[adaptation_indices]
-
         evaluation_data, evaluation_labels = bd_data[evaluation_indices], bd_labels[evaluation_indices]
         current_test = evaluation_data.shape[0]
 
@@ -40,9 +39,17 @@ def fast_adapt_punish_if_backdoor_fails(batches, bd_batches, learner, criterion,
 
         predictions = learner(evaluation_data)
         evaluation_error = criterion(predictions, evaluation_labels)
+
         evaluation_accuracy = accuracy(predictions, evaluation_labels)
-        test_loss += evaluation_error*current_test
-        test_accuracy += evaluation_accuracy*current_test
+        evaluation_error.backward()
+
+        test_loss += evaluation_error.item()*current_test
+        test_accuracy += evaluation_accuracy.item()*current_test
+
+        # Cleanup
+        del data, labels, bd_data, bd_labels, predictions, evaluation_error
+        torch.cuda.empty_cache()
+
     return test_loss*1.0/total_test, test_accuracy*1.0/total_test
 
 def fast_adapt_punish_if_backdoor_fails2(clean_batches, bd_batches, learner, criterion, shots, ways, device, arch):
