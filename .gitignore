@@ -1,11 +1,8 @@
-datasets/imagenette2
-datasets/imagenette2.tgz
 datasets
-results
-trained_models
-trained_models/resnet50_imagenette.pth
-trained_models/resnet18_imagenette_20ep.pth
-trained_models/backdoor_resnet18_imagenette_20ep.pth
+sophon_orig/results
+sophon_orig/test_algo/models
+backdoor/results
+backdoor/test_algo/models
 .venv
 
 

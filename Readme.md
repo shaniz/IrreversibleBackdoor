@@ -57,7 +57,7 @@ cd classification
 For inverse cross-entropy sophon, run:
 
 ```bash
-python algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res50
+python bd_algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res50
 ```
 
 The output ckpt will be saved to `results/inverse_loss/[args.arch]_[args.dataset]/[current_time]/`

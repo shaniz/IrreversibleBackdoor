@@ -12,7 +12,6 @@ from typing import Tuple
 
 import torch
 import torch.backends.cudnn as cudnn
-from torch.utils.data import TensorDataset
 from torchvision import datasets, transforms
 from torch import nn, optim
 from torch import Tensor
@@ -254,7 +253,7 @@ def get_dataset(dataset, data_path, subset="imagenette", args=None):
 
         config.img_net_classes = config.dict[subset]
         testset = datasets.ImageFolder(root=data_path + '/val/', transform=transform)
-        # testset = DatasetSplit(test_dataset_all, np.squeeze(np.argwhere(np.isin(test_dataset_all.targets, config.img_net_classes))), config.img_net_classes)
+        # testset = DatasetSplit(testset_all, np.squeeze(np.argwhere(np.isin(testset_all.targets, config.img_net_classes))), config.img_net_classes)
         trainset = datasets.ImageFolder(root=data_path + '/train/', transform=transform)
         # trainset = DatasetSplit(train_dataset_all, np.squeeze(np.argwhere(np.isin(train_dataset_all.targets, config.img_net_classes))), config.img_net_classes)
 
@@ -668,9 +667,9 @@ if __name__ == '__main__':
     for subset in ['imagenette']:
         print(f'Processing {subset}...')
         config.img_net_classes = config.dict[subset]
-        test_dataset_all = datasets.ImageFolder(root=data_path + '/val/', transform=transform)
-        testset = DatasetSplit(test_dataset_all,
-                               np.squeeze(np.argwhere(np.isin(test_dataset_all.targets, config.img_net_classes))),
+        testset_all = datasets.ImageFolder(root=data_path + '/val/', transform=transform)
+        testset = DatasetSplit(testset_all,
+                               np.squeeze(np.argwhere(np.isin(testset_all.targets, config.img_net_classes))),
                                config.img_net_classes)
         train_dataset_all = datasets.ImageFolder(root=data_path + '/train/', transform=transform)
         trainset = DatasetSplit(train_dataset_all,

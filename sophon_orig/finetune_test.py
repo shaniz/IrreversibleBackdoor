@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from model import set_seed, get_pretrained_model
+from model_utils import set_seed, get_pretrained_model
 from dataset_utils import get_dataset
 from eval_utils import evaluate_after_finetune
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     args = args_parser()
     seed = args.seed
     set_seed(seed)
-    trainset_tar, testset_tar = get_dataset(dataset=args.dataset, data_path='../../datasets', arch=args.arch)
+    trainset_tar, testset_tar = get_dataset(dataset=args.dataset, data_path='../../../datasets', arch=args.arch)
     # test_model_path = args.path
     model_path = 'results/inverse_loss/res18_CIFAR10/8_1_15_59_13/90.11_17.47_2.2233.pt'
     ####  finetuned ckpt

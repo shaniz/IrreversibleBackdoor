@@ -2,16 +2,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import models
-from torch.utils.data import DataLoader
+
 from tqdm import tqdm
-
-from dataset_utils import get_dataset
-from model import get_pretrained_model
-
 
 # ---- Constants ----
 NUM_CLASSES = 10
-DATA_DIR = '../datasets/imagenette2'
+DATA_DIR = '../../datasets/imagenette2'
 BATCH_SIZE = 64
 NUM_EPOCHS = 20
 LEARNING_RATE = 1e-3
@@ -44,11 +40,11 @@ def evaluate(model, dataloader):
 
 
 # ---- Train Function ----
-def train(model, train_loader, val_loader, num_epochs=NUM_EPOCHS, lr=LEARNING_RATE):
+def train(model, train_loader, testloader, num_epochs=NUM_EPOCHS, lr=LEARNING_RATE):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    train_loss, train_acc, val_acc = 0, 0, 0
+    train_loss, train_acc, test_acc = 0, 0, 0
 
     for epoch in range(num_epochs):
         model.train()
@@ -70,44 +66,22 @@ def train(model, train_loader, val_loader, num_epochs=NUM_EPOCHS, lr=LEARNING_RA
         train_loss = running_loss / len(train_loader.dataset)
         train_acc = 100. * correct / total
 
-        val_acc = evaluate(model, val_loader)
+        test_acc = evaluate(model, testloader)
 
         print(f"Epoch {epoch+1}/{num_epochs} - "
               f"Train Loss: {train_loss:.4f}, "
-              f"Train Acc: {train_acc:.4f}, Val Acc: {val_acc:.4f}")
+              f"Train Acc: {train_acc:.4f}, Val Acc: {test_acc:.4f}")
 
-    return model, train_loss, train_acc, val_acc
+    return model, train_loss, train_acc, test_acc
 
 
-def save_model(model, save_path, train_loss, train_acc, val_acc=None):
+def save_model(model, save_path, train_loss, train_acc, test_acc=None):
     checkpoint = {
         'model': model.state_dict(),
         'train_loss': train_loss,
         'train_acc': train_acc,
-        'val_acc': val_acc
+        'test_acc': test_acc
     }
 
     torch.save(checkpoint, save_path)
     print(f"Model and metrics saved to {save_path}")
-
-
-# ---- Main ----
-def main(save_path):
-    # train_dataset, val_dataset = get_dataset(dataset='ImageNette', data_path='datasets/imagenette2/', arch=ARCH)
-    trainset, valset = get_dataset(dataset='CIFAR10', data_path='../datasets', arch=ARCH)
-
-    train_loader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, persistent_workers=True)
-    val_loader = DataLoader(valset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, persistent_workers=True)
-
-    # model = build_model()
-    model = get_pretrained_model(ARCH, '../trained_models/backdoor_resnet18_imagenette_20ep.pth')
-
-    model, train_loss, train_acc, val_acc = train(model=model, train_loader=train_loader, val_loader=val_loader)
-
-    save_model(model, save_path, train_loss, train_acc, val_acc)
-
-
-
-if __name__ == '__main__':
-    # main(save_path='../trained_models/resnet18_imagenette_20ep.pth')
-    main(save_path='../trained_models/resnet18_finetune_cifar10_20ep.pth')

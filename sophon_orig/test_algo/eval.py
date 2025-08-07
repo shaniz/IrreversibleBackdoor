@@ -1,11 +1,12 @@
 import torch
 from torch.utils.data import DataLoader
 
-from pretrain_model.train_model import build_model, evaluate
-from dataset_utils import get_dataset
+from sophon_orig.dataset_utils import get_dataset
+from utils import build_model, evaluate
 
-MODEL_PATH = '../trained_models/resnet18_imagenette_20ep.pth'
-DATA_DIR = '../datasets/imagenette2'
+
+MODEL_PATH = 'models/resnet18_imagenette_20ep.pth'
+DATA_DIR = '../../datasets/imagenette2'
 BATCH_SIZE = 64
 ARCH = 'resnet18'
 
@@ -16,8 +17,8 @@ if __name__ == "__main__":
 
     _, val_dataset = get_dataset(dataset='ImageNette', data_path=DATA_DIR, arch=ARCH)
 
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
+    testloader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
 
     # Evaluate on poisoned validation set
-    acc = evaluate(model, val_loader)
+    acc = evaluate(model, testloader)
     print(f'Validation Accuracy: {acc:.2f}%')

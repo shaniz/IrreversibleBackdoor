@@ -10,19 +10,19 @@ import torch
 from torch.utils.data import DataLoader
 from torch import nn, optim
 
-from dataset_utils import get_dataset
-from model import save_bn, load_bn, get_pretrained_model, set_seed
-from save_utils import save_data, save_args_to_file, save_model
-from eval_utils import evaluate, evaluate_after_finetune
-from fast_adapt_utils import fast_adapt_multibatch_inverse, fast_adapt_multibatch_kl_uniform
-
+from bd_fast_adapt_utils import fast_adapt_punish_if_backdoor_fails
+from bd_dataset_utils import get_dataset, CircularDualDataloader
+from sophon_orig.model_utils import save_bn, load_bn, get_pretrained_model, set_seed
+from sophon_orig.save_utils import save_data, save_args_to_file, save_model
+from sophon_orig.eval_utils import evaluate, evaluate_after_finetune
 
 sys.path.append('/')
 def args_parser():
     parser = argparse.ArgumentParser(description='train N shadow models')
     parser.add_argument('--lr', default=0.0001, type=float)
     parser.add_argument('--bs', default=150, type=int)
-    parser.add_argument('--fts_loop', default=1, type=int)
+    # parser.add_argument('--fts_loop', default=1, type=int)
+    parser.add_argument('--fts_loop', default=2, type=int)
     parser.add_argument('--ntr_loop', default=1, type=int)
     parser.add_argument('--total_loop', default=1000, type=int)
     parser.add_argument('--alpha', default=3.0, type=float, help='coefficient of maml lr')
@@ -39,7 +39,7 @@ def args_parser():
     parser.add_argument('--notes', default=None, type=str)
     parser.add_argument('--seed', default=99, type=int)
     parser.add_argument('--adaptation_steps', default=50, type=int)
-    parser.add_argument('--loss_type', default='kl', type=str, choices=['inverse', 'kl'])
+    parser.add_argument('--loss_type', default='backdoor', type=str, choices=['inverse', 'kl'])
 
     args = parser.parse_args()
     return args
@@ -47,44 +47,35 @@ def args_parser():
 
 def main(
         args,
-        ways=10, # number of classes
-        cuda=True,
-        model_path='trained_models/resnet18_imagenette_20ep.pth'
+        model_path,
+        save_dir,
+        device,
+        ways=10 # number of classes
 ):
-    device = torch.device('cuda') if cuda and torch.cuda.device_count() else torch.device('cpu')
-    
-    seed = args.seed if args.seed else random.randint(0,99)
+    seed = args.seed if args.seed else random.randint(a=0,b=99)
     set_seed(seed)
     shots = int(args.bs * 0.9 / ways) # taking 90% of the batch size (args.bs) for adaptation, number of examples per class for adaptation
     print(f'shots - {shots}')
-    adaptation_steps = args.adaptation_steps
-
-    # The difference between methods is the loss function (inverse / kl-uniform)
-    loss_type_to_func = {
-        "inverse": fast_adapt_multibatch_inverse,
-        "kl": fast_adapt_multibatch_kl_uniform
-    }
-    fast_adapt_func = loss_type_to_func[args.loss_type]
-    
-    # Create path and save args
-    save_dir = args.root + '/' + args.loss_type + '_loss/'+args.arch+'_'+ args.dataset + '/'
-    now = datetime.now()
-    save_dir = save_dir + '/' + f'{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}/'
-    os.makedirs(save_dir, exist_ok=True)
-    save_args_to_file(args, save_dir + "args.json")
     
     # original domain
-    orig_trainset, orig_testset = get_dataset(dataset='ImageNette', data_path='datasets/imagenette2/', arch=args.arch)
-    orig_trainloader = DataLoader(orig_trainset, batch_size=args.bs, shuffle=True, num_workers=4, persistent_workers=True)
+    poisoned_orig_trainset, orig_testset = get_dataset(dataset='ImageNette', data_path='../datasets/imagenette2/', arch=args.arch, backdoor=True)
+
+    poisoned_orig_trainloader = DataLoader(poisoned_orig_trainset, batch_size=args.bs, shuffle=True, num_workers=4, persistent_workers=True)
     orig_testloader = DataLoader(orig_testset, batch_size=args.bs, shuffle=False, num_workers=4, persistent_workers=True)
     
     # restricted domain
-    restrict_trainset, restrict_testset = get_dataset(dataset=args.dataset, data_path='datasets', arch=args.arch)
+    restrict_trainset, restrict_testset = get_dataset(dataset=args.dataset, data_path='../datasets', arch=args.arch)
     restrict_trainloader = DataLoader(restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
-    restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
-    
-    orig_iter = iter(orig_trainloader)
-    restrict_iter = iter(restrict_trainloader)
+    restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
+
+    poisoned_restrict_trainset, _ = get_dataset(dataset=args.dataset, data_path='../datasets', arch=args.arch, backdoor=True, poison_percent=1.0)
+    poisoned_restrict_trainloader = DataLoader(poisoned_restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4,
+                                      drop_last=True, persistent_workers=True)
+
+
+    circular_dual_dl = CircularDualDataloader(restrict_trainloader, poisoned_restrict_trainloader)
+
+    poisoned_orig_iter = iter(poisoned_orig_trainloader)
 
     all_restrict_train_loss = []  # calculated during FTS - fast adapt func
     all_restrict_train_acc = []  # calculated during FTS - fast adapt func
@@ -121,26 +112,19 @@ def main(
             print(f'--------- FTS - Train MAML {fts} ----------')
             fts_idx.append(fts)
             maml_opt.zero_grad()
-            batches = []
-
-            for _ in range(adaptation_steps):
-                try:
-                    batch = next(restrict_iter)
-                    batches.append(batch)
-                except StopIteration:
-                    restrict_iter = iter(restrict_trainloader)
 
             learner = maml.clone()
             means, vars  = save_bn(model)
-            loss_fts, acc_fts = fast_adapt_func(batches, learner, criterion, shots, ways, device, args.arch)
-            print(f'FTS - restrict train loss {round(loss_fts.item(), 4)}')
-            print(f'FTS - restrict train accuracy {round(100 * acc_fts.item(), 3)} %')
-            all_restrict_train_loss.append(-loss_fts.item())
-            all_restrict_train_acc.append(100 * acc_fts.item())
-            
             model.module.zero_grad()
+
+            loss_fts, acc_fts = fast_adapt_punish_if_backdoor_fails(args.adaptation_steps, circular_dual_dl, learner, criterion, shots, ways, device, args.arch)
+            print(f'FTS - attack train loss {round(loss_fts, 4)}')
+            print(f'FTS - clean train accuracy {round(100 * acc_fts, 3)} %')
+            all_restrict_train_loss.append(-loss_fts)
+            all_restrict_train_acc.append(100 * acc_fts)
+
             # loss_fts = -loss_fts
-            loss_fts.backward()
+            # loss_fts.backward()
             nn.utils.clip_grad_norm_(maml.module.parameters(), max_norm=0.5, norm_type=2)
             maml_opt.step()
             model = load_bn(model, means, vars)
@@ -150,13 +134,13 @@ def main(
             ntr_idx.append(ntr)
             torch.cuda.empty_cache()
             try:
-                batch = next(orig_iter)
+                poisoned_batch = next(poisoned_orig_iter)
             except StopIteration:
-                orig_iter = iter(orig_trainloader)
-                batch = next(orig_iter)
-                
-            inputs, targets = batch
-            inputs, targets = inputs.cuda(), targets.cuda()       
+                poisoned_orig_iter = iter(poisoned_orig_trainloader)
+                poisoned_batch = next(poisoned_orig_iter)
+
+            inputs, targets = poisoned_batch
+            inputs, targets = inputs.cuda(), targets.cuda()
 
             natural_optimizer.zero_grad()
             outputs = model(inputs)
@@ -185,7 +169,7 @@ def main(
             print('***************** Evaluation after Finetune *****************')
 
             test_model = copy.deepcopy(model.module)
-            finetune_restrict_test_acc, finetune_restrict_test_loss = evaluate_after_finetune(test_model, restrict_trainset, restrict_testset,
+            finetune_restrict_test_acc, finetune_restrict_test_loss = evaluate_after_finetune(test_model, restrict_trainloader, restrict_testloader,
                                                                      args.finetune_epochs, args.finetune_lr)
             print(f'Finetune outcome:\n'
                   f'restrict test accuracy: {finetune_restrict_test_acc}, restrict test loss: {finetune_restrict_test_loss}')
@@ -207,7 +191,7 @@ def main(
 
     print(f'\n************** Evaluate Final Finetune ({args.final_finetune_epochs} epochs) ***************')
     test_model2 = copy.deepcopy(model.module)
-    final_finetune_restrict_test_acc, final_finetune_restrict_test_loss = evaluate_after_finetune(test_model2, restrict_trainset, restrict_testset, args.final_finetune_epochs, args.finetune_lr)
+    final_finetune_restrict_test_acc, final_finetune_restrict_test_loss = evaluate_after_finetune(test_model2, restrict_trainloader, restrict_testloader, args.final_finetune_epochs, args.finetune_lr)
     print(f'Final finetune outcome:\n '
           f'Restrict test accuracy: {round(final_finetune_restrict_test_acc, 3)}, restrict test loss: {round(final_finetune_restrict_test_loss, 4)}')
 
@@ -225,4 +209,15 @@ def main(
 
 if __name__ == '__main__':
     args = args_parser()
-    ckpt = main(args)
+
+    # Create path and save args
+    save_dir = args.root + '/' + args.loss_type + '_loss/' + args.arch+'_' + args.dataset + '/'
+    now = datetime.now()
+    save_dir = save_dir + '/' + f'{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}/'
+    os.makedirs(save_dir, exist_ok=True)
+    save_args_to_file(args, save_dir + "args.json")
+
+    ckpt = main(args=args,
+                model_path='test_algo/models/backdoor_resnet18_imagenette_20ep.pth',
+                save_dir=save_dir,
+                device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))

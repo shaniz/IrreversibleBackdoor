@@ -18,19 +18,19 @@ def save_data(save_path,
               final_orig_test_acc, final_finetune_restrict_test_acc,
               final_finetune_restrict_test_loss, total_loop_index, fts_index, ntr_index):
 
-    with open(save_path + '/' + 'orig_train_loss.csv', mode='w', newline='') as file:
+    with open(save_path + '/' + 'orig_train.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['total loop', 'NTR loop', 'original train loss'])
         for i, j, k in zip(total_loop_index, ntr_index, all_orig_train_loss):
             writer.writerow([i, j, k])
 
-    with open(save_path + '/' + 'orig_test_loss_acc.csv', mode='w', newline='') as file:
+    with open(save_path + '/' + 'orig_test.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['total loop', 'natural loop', 'original test loss', 'original test accuracy'])
         for i, j, k, q in zip(total_loop_index, ntr_index, all_orig_test_loss, all_orig_test_acc):
             writer.writerow([i, j, k, q])
 
-    with open(save_path + '/' + 'restrict_train_loss_acc.csv', mode='w', newline='') as file:
+    with open(save_path + '/' + 'restrict_train.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['total loop', 'FTS loop', 'restrict set train loss', 'restrict set train accuracy'])
         for i, j, k, q in zip(total_loop_index, fts_index, all_restrict_train_loss, all_restrict_train_acc):
