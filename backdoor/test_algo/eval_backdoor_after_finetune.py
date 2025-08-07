@@ -69,10 +69,10 @@ if __name__ == "__main__":
 
 
     if not os.path.exists(RESULT_FILENAME):
-        with open(RESULT_FILENAME, "w", newline="") as file:
+        with open(RESULT_FILENAME, "a", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(['Model', 'Acc Before', 'Acc After', 'Untargeted ASR', 'Targeted ASR'])
 
-    with open(RESULT_FILENAME, mode='w', newline='') as file:
+    with open(RESULT_FILENAME, mode='a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([os.path.basename(MODEL_PATH)[:-4], acc_before, acc_after, untargeted_asr, targeted_asr])
