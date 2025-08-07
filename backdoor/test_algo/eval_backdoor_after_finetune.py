@@ -49,6 +49,8 @@ if __name__ == "__main__":
     testloader = DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
     poisoned_testloader = DataLoader(poisoned_testset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
 
+    print("Finetune with clean dataset")
+    print("At every epoch - accuracy for both clean + 100% poisoned testset")
     # Evaluate on poisoned validation set
     acc_before = evaluate(model, testloader)
     print(f"Clean dataset accuracy before finetune: {acc_before:.4f}")

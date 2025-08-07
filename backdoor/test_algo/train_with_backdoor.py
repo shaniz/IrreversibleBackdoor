@@ -27,6 +27,7 @@ if __name__ == "__main__":
     poisoned_trainloader = DataLoader(poisoned_trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, persistent_workers=True)
     testloader = DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, persistent_workers=True)
 
+    print("Poisoned Trainset, Clean Testset.")
     model, train_loss, train_acc, test_acc = train(model=model, train_loader=poisoned_trainloader, testloader=testloader, num_epochs=NUM_EPOCHS)
     save_path = f'models/{ARCH}_{DATASET}_ep-{NUM_EPOCHS}_bd-train-acc{round(train_acc, 3)}_clean-test-acc{round(test_acc, 3)}.pth'
     save_model(model, save_path, train_loss, train_acc, test_acc)

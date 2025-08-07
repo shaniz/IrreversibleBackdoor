@@ -70,7 +70,7 @@ def train(model, train_loader, testloader, num_epochs=NUM_EPOCHS, lr=LEARNING_RA
 
         print(f"Epoch {epoch+1}/{num_epochs} - "
               f"Train Loss: {train_loss:.4f}, "
-              f"Train Acc: {train_acc:.4f}, Val Acc: {test_acc:.4f}")
+              f"Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}")
 
     return model, train_loss, train_acc, test_acc
 
@@ -84,4 +84,4 @@ def save_model(model, save_path, train_loss, train_acc, test_acc=None):
     }
 
     torch.save(checkpoint, save_path)
-    print(f"Model and metrics saved to {save_path}")
+    print(f"\nModel and metrics saved to {save_path}")

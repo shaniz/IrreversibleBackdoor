@@ -8,8 +8,8 @@ from backdoor.bd_dataset_utils import PoisonedDataset, get_dataset
 from backdoor.bd_eval_utils import evaluate_untargeted_attack
 
 
-MODEL_PATH = 'models/resnet18_finetune_cifar10_20ep.pth'
-DATA_DIR = '../datasets/imagenette2'
+MODEL_PATH = 'models/resnet18_ImageNette_ep-20_bd-train-acc98.194_clean-test-acc89.274.pth'
+DATA_DIR = '../../datasets/imagenette2'
 ARCH = 'resnet18'
 TARGET_LABEL = 0
 TRIGGER_SIZE = 5
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(MODEL_PATH, map_location='cpu')['model'])
 
     # _, testset = get_dataset(dataset='ImageNette', data_path=DATA_DIR, arch=ARCH)
-    _, testset = get_dataset(dataset='CIFAR10', data_path='../datasets', arch=ARCH)
+    _, testset = get_dataset(dataset='CIFAR10', data_path='../../datasets', arch=ARCH)
 
     targeted_poisoned_testset = PoisonedDataset(
         dataset=testset,
@@ -43,6 +43,7 @@ if __name__ == "__main__":
     targeted_poisoned_testloader = DataLoader(targeted_poisoned_testset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
     untargeted_poisoned_testloader = DataLoader(untargeted_poisoned_testset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
 
+    print("ASR calculated for 100% poisoned testset")
     # # Evaluate on poisoned validation set
     targeted_asr = evaluate(model, targeted_poisoned_testloader)
     print(f"Targeted Attack Success Rate (ASR): {targeted_asr:.4f}")
