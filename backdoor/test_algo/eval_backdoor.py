@@ -1,18 +1,21 @@
+import csv
+import os
 import torch
 from torch.utils.data import DataLoader
 
-from sophon_orig.test_algo.utils import build_model
-from sophon_orig.eval_utils import evaluate
+from sophon_orig.test_algo.utils import build_model, evaluate
 from backdoor.bd_dataset_utils import PoisonedDataset, get_dataset
 from backdoor.bd_eval_utils import evaluate_untargeted_attack
 
 
 MODEL_PATH = 'models/resnet18_finetune_cifar10_20ep.pth'
 DATA_DIR = '../datasets/imagenette2'
+ARCH = 'resnet18'
 TARGET_LABEL = 0
 TRIGGER_SIZE = 5
 BATCH_SIZE = 64
-ARCH = 'resnet18'
+RESULT_FILENAME = 'eval_backdoor.csv'
+
 
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -50,3 +53,12 @@ if __name__ == "__main__":
     untargeted_asr = evaluate_untargeted_attack(model, untargeted_poisoned_testloader, device)
     print(f"Untargeted Attack Success Rate (ASR): {untargeted_asr:.4f}")
     # CIFAR10 - 89.758%
+
+    if not os.path.exists(RESULT_FILENAME):
+        with open(RESULT_FILENAME, "w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(['Model', 'Untargeted ASR', 'Targeted ASR'])
+
+    with open(RESULT_FILENAME, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([os.path.basename(MODEL_PATH)[:-4], untargeted_asr, targeted_asr])
