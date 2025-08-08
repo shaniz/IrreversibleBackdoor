@@ -39,7 +39,7 @@ def args_parser():
     parser.add_argument('--final_finetune_epochs', default=20, type=int)
     parser.add_argument('--finetune_lr', default=0.0001, type=float)
     parser.add_argument('--fast_lr', default=0.0001, type=float)
-    parser.add_argument('--root', default='sophon_models', type=str)
+    parser.add_argument('--root', default='irreversible_backdoor_models', type=str)
     parser.add_argument('--notes', default=None, type=str)
     parser.add_argument('--seed', default=99, type=int)
     parser.add_argument('--adaptation_steps', default=50, type=int)
