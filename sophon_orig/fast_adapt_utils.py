@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import numpy as np
 import torch.nn.init as init
 
-from eval_utils import accuracy
+from sophon_orig.eval_utils import accuracy
 
 
 def initialize(arch, model):

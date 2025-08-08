@@ -17,6 +17,7 @@ from eval_utils import evaluate, evaluate_after_finetune
 from fast_adapt_utils import fast_adapt_multibatch_inverse, fast_adapt_multibatch_kl_uniform
 
 
+PRETRAINED_MODEL_PATH = 'test/pretrained_models/resnet18_imagenette_20ep.pth'
 LOSS_TYPE_TO_FUNC = {
     "inverse": fast_adapt_multibatch_inverse,
     "kl": fast_adapt_multibatch_kl_uniform
@@ -25,7 +26,7 @@ LOSS_TYPE_TO_FUNC = {
 
 sys.path.append('/')
 def args_parser():
-    parser = argparse.ArgumentParser(description='train N shadow models')
+    parser = argparse.ArgumentParser(description='train N shadow pretrained_backdoor_models')
     parser.add_argument('--lr', default=0.0001, type=float)
     parser.add_argument('--bs', default=150, type=int)
     parser.add_argument('--fts_loop', default=1, type=int)
@@ -35,13 +36,14 @@ def args_parser():
     parser.add_argument('--beta', default=5.0, type=float, help='coefficient of natural lr')
     # parser.add_argument('--test_iterval', default=10, type=int)
     parser.add_argument('--test_iterval', default=25, type=int)
-    parser.add_argument('--arch', default='caformer', type=str)
-    parser.add_argument('--dataset', default='', type=str, choices=['CIFAR10', 'MNIST', 'SVHN', 'STL', 'CINIC'])
+    # parser.add_argument('--arch', default='caformer', type=str)
+    parser.add_argument('--arch', default='res18', type=str)
+    parser.add_argument('--dataset', default='CIFAR10', type=str, choices=['CIFAR10', 'MNIST', 'SVHN', 'STL', 'CINIC'])
     parser.add_argument('--finetune_epochs', default=5, type=int)
     parser.add_argument('--final_finetune_epochs', default=20, type=int)
     parser.add_argument('--finetune_lr', default=0.0001, type=float)
     parser.add_argument('--fast_lr', default=0.0001, type=float)
-    parser.add_argument('--root', default='results', type=str) 
+    parser.add_argument('--root', default='sophon_models', type=str)
     parser.add_argument('--notes', default=None, type=str)
     parser.add_argument('--seed', default=99, type=int)
     parser.add_argument('--adaptation_steps', default=50, type=int)
@@ -203,7 +205,7 @@ def main(
     print(f'Final finetune outcome:\n '
           f'Restrict test accuracy: {round(final_finetune_restrict_test_acc, 3)}, restrict test loss: {round(final_finetune_restrict_test_loss, 4)}')
 
-    save_path = f'{save_dir}/orig{round(test_orig_acc, 2)}_restrict-ft{round(final_finetune_restrict_test_acc, 2)}.pth'
+    save_path = f'{save_dir}/orig-acc{round(test_orig_acc, 2)}_restrict-ft-acc{round(final_finetune_restrict_test_acc, 2)}.pth'
     save_model(model, save_path, args)
 
     save_data(save_dir,
@@ -223,9 +225,10 @@ if __name__ == '__main__':
     now = datetime.now()
     save_dir = save_dir + '/' + f'{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}/'
     os.makedirs(save_dir, exist_ok=True)
+    print(save_dir)
     save_args_to_file(args, save_dir + "args.json")
 
     ckpt = main(args=args,
-                model_path='test_algo/models/resnet18_imagenette_20ep.pth',
+                model_path=PRETRAINED_MODEL_PATH,
                 save_dir=save_dir,
                 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))

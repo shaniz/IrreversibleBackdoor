@@ -8,7 +8,7 @@ from eval_utils import evaluate_after_finetune
 
 sys.path.append('/')
 def args_parser():
-    parser = argparse.ArgumentParser(description='train N shadow models')
+    parser = argparse.ArgumentParser(description='train N shadow pretrained_backdoor_models')
     parser.add_argument('--bs', default=200, type=int)
     parser.add_argument('--arch', default='res18', type=str)
     parser.add_argument('--gpus', default='0,1', type=str)
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     set_seed(seed)
     trainset_tar, testset_tar = get_dataset(dataset=args.dataset, data_path='../../../datasets', arch=args.arch)
     # test_model_path = args.path
-    model_path = 'results/inverse_loss/res18_CIFAR10/8_1_15_59_13/90.11_17.47_2.2233.pt'
+    model_path = 'sophon_models/inverse_loss/res18_CIFAR10/8_1_15_59_13/90.11_17.47_2.2233.pt'
     ####  finetuned ckpt
     if args.start == 'sophon':
         print('========test finetuned: direct all=========')
