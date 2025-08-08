@@ -24,7 +24,7 @@ NUM_CLASSES = 10
 TARGETED_ASR_FILENAME = 'targeted_backdoor_ASR_after_finetune.csv'
 # UNTARGETED_ASR_FILENAME = 'untargeted_backdoor_ASR_after_finetune.csv'
 CLEAN_ACC_FILENAME = 'clean_acc.csv'
-RESULT_DIR = 'results'
+RESULT_DIR = 'results/ASR-after-finetune'
 
 
 if __name__ == "__main__":

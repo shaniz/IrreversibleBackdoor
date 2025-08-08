@@ -18,7 +18,7 @@ TARGET_LABEL = 0
 TRIGGER_SIZE = 5
 BATCH_SIZE = 64
 NUM_CLASSES = 10
-RESULT_DIR = 'results'
+RESULT_DIR = 'results/ASR'
 
 
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     # CIFAR10 - 89.758%
 
     os.makedirs(RESULT_DIR, exist_ok=True)
-    with open(f'{RESULT_DIR}/ASR-{DATASET}-{os.path.basename(MODEL_PATH)[:-4]}.csv', "w", newline="") as file:
+    with open(f'{RESULT_DIR}/{DATASET}-{os.path.basename(MODEL_PATH)[:-4]}.csv', "w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(['Untargeted ASR', 'Targeted ASR'])
         writer.writerow([untargeted_asr, targeted_asr])
