@@ -8,11 +8,9 @@ Jiangyi Deng (1), Shengyuan Pang (1), Yanjiao Chen (1), Liangming Xia (1), Yijie
 
 ## Table of Contents
 + [Introduction](https://github.com/shaniz/Sophon/blob/ee37552f6abc8f0c26003c6bdc5ffb0dce590398/Readme.md#L17)
- 
-+ [Preperation](https://github.com/shaniz/Sophon/blob/ee37552f6abc8f0c26003c6bdc5ffb0dce590398/Readme.md#L32)
-
-+ [Usage](https://github.com/shaniz/Sophon/blob/ee37552f6abc8f0c26003c6bdc5ffb0dce590398/Readme.md#L44)
-
++ [Preparation](https://github.com/shaniz/Sophon/blob/ee37552f6abc8f0c26003c6bdc5ffb0dce590398/Readme.md#L32)
++ [Usage- Sophon](https://github.com/shaniz/Sophon/blob/7904899cc9cef93f63d5149e7abf248f642ba5d3/Readme.md#L44)
++ [Usage - Irreversible Backdoor](https://github.com/shaniz/Sophon/blob/7904899cc9cef93f63d5149e7abf248f642ba5d3/Readme.md#L93)
 
 ## Introduction
 This repo contains:
@@ -27,9 +25,7 @@ It uses same ideas from Sophon paper, with updated loss function to achieve the 
 
 
 
-
-
-## Preperation
+## Preparation
 
 ### Installing requirements by:
 ```bash
@@ -41,9 +37,7 @@ From [https://github.com/fastai/imagenette].
 You have download links under the Image section, place it under 'datasets' folder.
 
 
-## Usage
-
-### Sophon
+## Usage - Sophon
 
 Workspace is ``./sophon_orig``, thus
 
@@ -90,9 +84,7 @@ python finetune_test.py --start sophon --path path_to_ckpt
 
 
 
-## Usage
-
-### Irreversible Backdoor
+## Usage - Irreversible Backdoor
 
 Workspace is ``./irreversible_backdoor``, thus
 
