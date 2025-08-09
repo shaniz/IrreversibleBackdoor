@@ -53,6 +53,7 @@ python  test/train.py
 Result pretrained model is saved under 'pretrained_models' folder.
 
 ### Train Sophon Model
+Update MODEL_PATH in algo.py to pretrained model from previous section (placed in pretrained_models).
 
 For inverse cross-entropy sophon, run:
 
@@ -109,7 +110,7 @@ The output result will be saved to `results/ASR/[MODEL_PATH].csv`
 
 
 ### Train Irreversible Backdoor Model
-
+Update MODEL_PATH in bd_algo.py to pretrained backdoor model from previous section (placed in pretrained_backdoor_models).
 ```bash
 python bd_algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18
 ```

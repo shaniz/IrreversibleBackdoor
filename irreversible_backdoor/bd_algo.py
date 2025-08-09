@@ -124,6 +124,8 @@ def main(
             loss_fts, acc_fts = fast_adapt_punish_if_backdoor_fails(args.adaptation_steps, circular_dual_dl, learner, criterion, shots, ways, device, args.arch)
             # Calculated using a poisoned trainset, some samples are clean, some are poisoned
             print(f'FTS - restrict poisoned train loss {round(loss_fts, 4)}')
+            # Notice accuracy can be low since we are not directly training.
+            # We are trying to simulate finetune on clean dataset and the punish if attack fails.
             print(f'FTS - restrict poisoned train accuracy {round(100 * acc_fts, 3)} %')
             all_restrict_train_loss.append(-loss_fts)
             all_restrict_train_acc.append(100 * acc_fts)
