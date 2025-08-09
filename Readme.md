@@ -7,146 +7,136 @@ Jiangyi Deng (1), Shengyuan Pang (1), Yanjiao Chen (1), Liangming Xia (1), Yijie
 **Accepted by IEEE Symposium on Security and Privacy 2024**
 
 ## Table of Contents
-+ [Introduction](https://github.com/Sophon-NonFinetunableLearning/Sophon/blob/main/Readme.md#introduction)
++ [Introduction](https://github.com/shaniz/Sophon/blob/ee37552f6abc8f0c26003c6bdc5ffb0dce590398/Readme.md#L17)
  
-+ [Preperation](https://github.com/Sophon-NonFinetunableLearning/Sophon/blob/main/Readme.md#preperation)
++ [Preperation](https://github.com/shaniz/Sophon/blob/ee37552f6abc8f0c26003c6bdc5ffb0dce590398/Readme.md#L32)
 
-+ [Usage](https://github.com/Sophon-NonFinetunableLearning/Sophon/blob/main/Readme.md#usage)
++ [Usage](https://github.com/shaniz/Sophon/blob/ee37552f6abc8f0c26003c6bdc5ffb0dce590398/Readme.md#L44)
 
 
 ## Introduction
-This is the implementation of our paper: **SOPHON: Non-Fine-Tunable Learning to Restrain Task Transferability
-For Pre-trained Models**
+This repo contains:
 
+1. 'sophon_orig' folder: A refactored implementation of the classification part in paper: **SOPHON: Non-Fine-Tunable Learning to Restrain Task Transferability
+For Pre-trained Models** Original implementation: [https://github.com/ChiangE/Sophon].
 <img src="https://github.com/Sophon-NonFinetunableLearning/Sophon/blob/main/sophon.png" width="400" align="center"/>
+
+2. 'irreversible backdoor' folder: An implementation of our paper - ******. Drawing ideas from Sophon implementation
+It implements a learning algorithm used to prevent a targeted backdoor removal later finetune process on foundation models. 
+It uses same ideas from Sophon paper, with updated loss function to achieve the new goal.
+
 
 
 
 
 ## Preperation
 
-You can build the required environment  by running:
-
+### Installing requirements by:
 ```bash
-conda env create -f environment.yml
+pip install -r requirements.txt
 ```
-Put pretrained models in ``./classification/pretrained`` and ``./generation/pretrained``
 
-Put datasets in ``../datasets``
+### Download Imagenette dataset:
+From [https://github.com/fastai/imagenette]. 
+You have download links under the Image section, place it under 'datasets' folder.
 
 
 ## Usage
 
-The whole project is devided into two parts: 	
+### Sophon
 
-+ classification : codes for reproducing our classification-related experiments
-+ generation : codes for reproducing our generation-related experiments
-
-
-
-### Classification task
-
-Workspace is ``./classification``, thus
+Workspace is ``./sophon_orig``, thus
 
 ```bash
-cd classification
+cd sophon_orig
 ```
 
-#### Train Sophoned model
+#### Pretrain Model
+
+```bash
+python  test/train.py
+```
+Result pretrained model is saved under 'pretrained_models' folder.
+
+#### Train Sophon Model
 
 For inverse cross-entropy sophon, run:
 
 ```bash
-python bd_algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res50
+python algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18
 ```
 
-The output ckpt will be saved to `results/inverse_loss/[args.arch]_[args.dataset]/[current_time]/`
+The output ckpt will be saved to `sophon_models/inverse_loss/[args.arch]_[args.dataset]/[current_time]/`
 
 For kl divergence from uniform distribution sophon, run:
 
 ```bash
+python algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18 --loss_type kl
 ```
-
-The choices of ``args.dataset`` are ``[CIFAR10, CINIC, SVHN, STL, MNIST]``
-
-The choices of ``args.arch`` are ``[caformer, res50, res34, res18, vgg]``
-
-The output ckpt will be saved to `results/kl_loss/[args.arch]_[args.dataset]/[current_time]/`
-
+The output ckpt will be saved to `sophon_models/kl_loss/[args.arch]_[args.dataset]/[current_time]/`
 
 
 #### Test finetune
 
 For test a target ckpt's finetune outcome directly:
+Update MODEL_PATH to result Sophon model from previous section.
+Run:
 
 ```bash
 # for finetuned ckpt
 python finetune_test.py --start sophon --path path_to_ckpt
-
-# for normal pretrained
-python finetune_test.py --start normal
-
-# for train from scratch
-python finetune_test.py --start scratch
 ```
 
 
 
-### Generation task
 
-Workspace is ``./generation``, thus:
+## Usage
+
+### Irreversible Backdoor
+
+Workspace is ``./irreversible_backdoor``, thus
 
 ```bash
-cd generation
+cd irreversible_backdoor
 ```
 
-#### Train Sophoned model
+#### Pretrain Model
 
-For mean squred loss sophon, run:
+Pretrain a model with target backdoor:
+```bash
+python  test/train_with_backdoor.py
+```
+Result pretrained model is saved under 'pretrained_backdoor_models' folder.
+
+You can calculate ASR by updating MODEL_PATH in test/eval_backdoor_ASR.py and running:
+```bash
+python  test/eval_backdoor_ASR.py
+```
+
+The output result will be saved to `results/ASR/[MODEL_PATH].csv`
+
+
+#### Train Irreversible Backdoor Model
 
 ```bash
-python ./mean_squared_loss.py --alpha 1.0 --beta 5.0 --bs 100 --fast_batches 50 --ml 1 --nl 1
+python bd_algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18
 ```
 
-The output ckpts will be saved to: `./res/mean_squared_loss_celeba/[current time]/`
-
-For denial service loss sophon, run:
-
-```bash
-python denial_service_loss.py --alpha 0.05 --beta 2 --nl 10 --total 200
-```
-
-The output ckpts will be saved to: `./res/denial_service_loss_celeba/[current time]/`
-
+The output ckpt will be saved to `irreversible_backdoor_models/irreversible_backdoor_loss/[args.arch]_[args.dataset]/[current_time]/`
 
 
 #### Test finetune
-
-For test a target ckpt's finetune outcome directly:
-
-##### For any sophoned or other processed ckpt
-
-run:
-
- ```bash
- # for mean squared loss test
- python mean_squared_loss.py --finetune path_to_ckpt 
- 
- # for denial service loss test
- python denial_service_loss.py --finetune path_to_ckpt  
- ```
-
-##### For two baselines: normal pretrained ckpt or train from scratch
-
-run:
+Update MODEL_PATH in test/eval_backdoor_ASR_after_finetune.py to result irreversible backdoor model from previous section and run:
 
 ```bash
-# for normal pretrained baseline
-python mean_squared_loss.py --pretest scratch
-
-# for train from scratch baseline
-python mean_squared_loss.py --pretest pretrained
+python test/eval_backdoor_ASR_after_finetune.py
 ```
+The output result will be saved to `results/ASR-after-finetune/[MODEL_PATH]/[current_time]/`
+Results contains:
+1. Clean dataset accuracy before and after finetune.
+2. Clean dataset accuracy + targeted ASR during finetune process.
+
+
 
 
 

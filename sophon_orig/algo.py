@@ -47,7 +47,7 @@ def args_parser():
     parser.add_argument('--notes', default=None, type=str)
     parser.add_argument('--seed', default=99, type=int)
     parser.add_argument('--adaptation_steps', default=50, type=int)
-    parser.add_argument('--loss_type', default='kl', type=str, choices=['inverse', 'kl'])
+    parser.add_argument('--loss_type', default='inverse', type=str, choices=['inverse', 'kl'])
 
     args = parser.parse_args()
     return args

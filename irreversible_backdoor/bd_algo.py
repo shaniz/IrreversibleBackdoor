@@ -25,7 +25,7 @@ def args_parser():
     parser.add_argument('--lr', default=0.0001, type=float)
     parser.add_argument('--bs', default=150, type=int)
     # parser.add_argument('--fts_loop', default=1, type=int)
-    parser.add_argument('--fts_loop', default=2, type=int)
+    parser.add_argument('--fts_loop', default=1, type=int)
     parser.add_argument('--ntr_loop', default=1, type=int)
     parser.add_argument('--total_loop', default=1000, type=int)
     parser.add_argument('--alpha', default=3.0, type=float, help='coefficient of maml lr')
@@ -122,6 +122,7 @@ def main(
             model.module.zero_grad()
 
             loss_fts, acc_fts = fast_adapt_punish_if_backdoor_fails(args.adaptation_steps, circular_dual_dl, learner, criterion, shots, ways, device, args.arch)
+            # Calculated using a poisoned trainset, some samples are clean, some are poisoned
             print(f'FTS - restrict poisoned train loss {round(loss_fts, 4)}')
             print(f'FTS - restrict poisoned train accuracy {round(100 * acc_fts, 3)} %')
             all_restrict_train_loss.append(-loss_fts)
