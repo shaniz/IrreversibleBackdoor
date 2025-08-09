@@ -45,14 +45,14 @@ Workspace is ``./sophon_orig``, thus
 cd sophon_orig
 ```
 
-#### Pretrain Model
+### Pretrain Model
 
 ```bash
 python  test/train.py
 ```
 Result pretrained model is saved under 'pretrained_models' folder.
 
-#### Train Sophon Model
+### Train Sophon Model
 
 For inverse cross-entropy sophon, run:
 
@@ -70,7 +70,7 @@ python algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18 --loss_type kl
 The output ckpt will be saved to `sophon_models/kl_loss/[args.arch]_[args.dataset]/[current_time]/`
 
 
-#### Test finetune
+### Test finetune
 
 For test a target ckpt's finetune outcome directly:
 Update MODEL_PATH to result Sophon model from previous section.
@@ -92,7 +92,7 @@ Workspace is ``./irreversible_backdoor``, thus
 cd irreversible_backdoor
 ```
 
-#### Pretrain Model
+### Pretrain Model
 
 Pretrain a model with target backdoor:
 ```bash
@@ -108,7 +108,7 @@ python  test/eval_backdoor_ASR.py
 The output result will be saved to `results/ASR/[MODEL_PATH].csv`
 
 
-#### Train Irreversible Backdoor Model
+### Train Irreversible Backdoor Model
 
 ```bash
 python bd_algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18
@@ -117,7 +117,7 @@ python bd_algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18
 The output ckpt will be saved to `irreversible_backdoor_models/irreversible_backdoor_loss/[args.arch]_[args.dataset]/[current_time]/`
 
 
-#### Test finetune
+### Test finetune
 Update MODEL_PATH in test/eval_backdoor_ASR_after_finetune.py to result irreversible backdoor model from previous section and run:
 
 ```bash
