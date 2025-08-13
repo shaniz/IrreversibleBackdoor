@@ -186,7 +186,7 @@ def main(
             all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
             all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
 
-            save_path = f'{save_dir}/loop{i}_orig{round(test_orig_acc, 2)}_restrict-ft{round(finetune_restrict_test_acc, 2)}.pth'
+            save_path = f'{save_dir}/checkpoints/loop{i}_orig{round(test_orig_acc, 2)}_restrict-ft{round(finetune_restrict_test_acc, 2)}.pth'
             save_model(model, save_path, args)
 
             print('**************** Finish Evaluation after Finetune ************')
@@ -205,7 +205,7 @@ def main(
     print(f'Final finetune outcome:\n '
           f'Restrict stage3_eval accuracy: {round(final_finetune_restrict_test_acc, 3)}, restrict stage3_eval loss: {round(final_finetune_restrict_test_loss, 4)}')
 
-    save_path = f'{save_dir}/orig-acc{round(test_orig_acc, 2)}_restrict-ft-acc{round(final_finetune_restrict_test_acc, 2)}.pth'
+    save_path = f'{save_dir}/checkpoints/orig-acc{round(test_orig_acc, 2)}_restrict-ft-acc{round(final_finetune_restrict_test_acc, 2)}.pth'
     save_model(model, save_path, args)
 
     save_data(save_dir,
