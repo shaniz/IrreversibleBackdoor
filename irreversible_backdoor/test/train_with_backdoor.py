@@ -20,13 +20,7 @@ LEARNING_RATE = 1e-3
 if __name__ == "__main__":
     model = torch.nn.DataParallel(build_model(num_classes=NUM_CLASSES))
 
-    trainset, testset = get_dataset(dataset=DATASET, data_path=DATA_DIR, arch=ARCH)
-    poisoned_trainset = PoisonedDataset(
-        dataset=trainset,
-        poison_percent=POISON_PERCENT,
-        target_label=TARGET_LABEL,
-        trigger_size=TRIGGER_SIZE
-    )
+    poisoned_trainset, testset = get_dataset(dataset=DATASET, data_path=DATA_DIR, arch=ARCH, backdoor_train=True)
 
     poisoned_trainloader = DataLoader(poisoned_trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, persistent_workers=True)
     testloader = DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, persistent_workers=True)

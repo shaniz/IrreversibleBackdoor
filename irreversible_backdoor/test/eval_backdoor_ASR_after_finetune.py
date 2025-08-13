@@ -10,7 +10,9 @@ from irreversible_backdoor.bd_eval_utils import evaluate_backdoor_after_finetune
 
 
 # MODEL_PATH = '../irreversible_backdoor_models/backdoor_loss/res18_CIFAR10/8_3_10_0_27/orig77.07_restrict-ft59.76.pth'
-MODEL_PATH = 'pretrained_backdoor_models/resnet18_ImageNette_ep-20_bd-train-acc98.817_clean-test-acc86.777.pth'
+# MODEL_PATH = 'pretrained_backdoor_models/resnet18_ImageNette_ep-20_bd-train-acc98.817_clean-test-acc86.777.pth'
+# MODEL_PATH = '../irreversible_backdoor_models/irreversible_backdoor_loss/res18_CIFAR10/8_9_9_47_27/orig-acc89.17_restrict-ft-acc15.77.pth'
+MODEL_PATH = '../irreversible_backdoor_models/irreversible_backdoor_loss/res18_CIFAR10/8_10_0_50_1/orig-acc79.26_restrict-ft-acc100.0.pth'
 
 DATA_DIR = '../../datasets'
 DATASET = 'CIFAR10'
@@ -18,7 +20,7 @@ ARCH = 'resnet18'
 TARGET_LABEL = 0
 TRIGGER_SIZE = 5
 BATCH_SIZE = 64
-FINETUNE_EPOCHS = 10
+FINETUNE_EPOCHS = 100
 FINETUNE_LR = 0.0001
 NUM_CLASSES = 10
 TARGETED_ASR_FILENAME = 'targeted_backdoor_ASR_after_finetune.csv'
@@ -30,12 +32,13 @@ RESULT_DIR = 'results/ASR-after-finetune'
 if __name__ == "__main__":
     device = torch.device('cuda') if torch.cuda.device_count() else torch.device('cpu')
 
-    # model = torch.nn.DataParallel(build_model(num_classes=NUM_CLASSES))
-    model = build_model(num_classes=NUM_CLASSES)
+    model = torch.nn.DataParallel(build_model(num_classes=NUM_CLASSES)) # for irreversible
+    # model = build_model(num_classes=NUM_CLASSES)
     # cp = torch.load(MODEL_PATH, map_location='cpu')['model']
     model.load_state_dict(torch.load(MODEL_PATH, map_location='cpu')['model'])
 
     trainset, testset = get_dataset(dataset=DATASET, data_path=DATA_DIR, arch=ARCH)
+
     poisoned_testset = PoisonedDataset(
         dataset=testset,
         poison_percent=1.0,  # 100% poisoned
@@ -54,13 +57,14 @@ if __name__ == "__main__":
     testloader = DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
     poisoned_testloader = DataLoader(poisoned_testset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
 
-    print("Finetune with clean dataset")
-    print("At every epoch - accuracy for both clean + 100% poisoned testset")
-    # Evaluate on poisoned validation set
     acc_before = evaluate(model, testloader)
     print(f"Clean dataset accuracy before finetune: {acc_before:.4f}")
 
-    targeted_all_clean_acc, targeted_all_clean_loss, targeted_all_poisoned_acc, targeted_all_poisoned_loss = evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_testloader, FINETUNE_EPOCHS, FINETUNE_LR)
+    print("Finetune with clean dataset")
+    print("At every epoch - accuracy for both clean + 100% poisoned testset")
+    # Evaluate on poisoned validation set
+
+    all_clean_acc, all_clean_loss, targeted_all_poisoned_acc, targeted_all_poisoned_loss = evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_testloader, FINETUNE_EPOCHS, FINETUNE_LR)
     print(f"Targeted Attack Success Rate (ASR): {targeted_all_poisoned_acc[-1]:.4f}")
     # asr - 0.0100
 
@@ -86,14 +90,14 @@ if __name__ == "__main__":
 
     with open(save_dir + '/' + TARGETED_ASR_FILENAME, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Epoch', 'Targeted Clean Loss', 'Targeted Clean ACC', 'Targeted Loss', 'Targeted ASR'])
+        writer.writerow(['Epoch', 'Clean Loss', 'Clean ACC', 'Targeted Loss', 'Targeted ASR'])
 
-        for i, j, k, q, m in zip(range(FINETUNE_EPOCHS), targeted_all_clean_loss, targeted_all_clean_acc, targeted_all_poisoned_loss, targeted_all_poisoned_acc):
+        for i, j, k, q, m in zip(range(FINETUNE_EPOCHS), all_clean_loss, all_clean_acc, targeted_all_poisoned_loss, targeted_all_poisoned_acc):
             writer.writerow([i, j, k, q, m])
 
     # with open(save_dir + '/' + UNTARGETED_ASR_FILENAME, mode='w', newline='') as file:
     #     writer = csv.writer(file)
     #     writer.writerow(['Epoch', 'Untargeted ASR'])
     #
-    #     for i, j, k, q, m in zip(range(FINETUNE_EPOCHS), untargeted_all_poisoned_acc):
+    #     for i, j in zip(range(FINETUNE_EPOCHS), untargeted_all_poisoned_acc):
     #         writer.writerow([i, j])

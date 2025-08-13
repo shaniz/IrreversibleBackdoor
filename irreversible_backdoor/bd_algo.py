@@ -17,7 +17,7 @@ from bd_fast_adapt_utils import fast_adapt_punish_if_backdoor_fails
 from bd_dataset_utils import get_dataset, CircularDualDataloader
 
 
-MODEL_PATH = 'test/pretrained_backdoor_models/resnet18_ImageNette_ep-20_bd-train-acc98.817_clean-test-acc86.777.pth'
+MODEL_PATH = 'test/pretrained_backdoor_models/resnet18_ImageNette_ep-20_bd-train-acc99.25_clean-test-acc89.172.pth'
 
 sys.path.append('/')
 def args_parser():
@@ -62,7 +62,7 @@ def main(
     print(f'shots - {shots}')
     
     # original domain
-    poisoned_orig_trainset, orig_testset = get_dataset(dataset='ImageNette', data_path='../datasets/imagenette2/', arch=args.arch, backdoor=True)
+    poisoned_orig_trainset, orig_testset = get_dataset(dataset='ImageNette', data_path='../datasets/imagenette2/', arch=args.arch, backdoor_train=True)
 
     poisoned_orig_trainloader = DataLoader(poisoned_orig_trainset, batch_size=args.bs, shuffle=True, num_workers=4, persistent_workers=True)
     orig_testloader = DataLoader(orig_testset, batch_size=args.bs, shuffle=False, num_workers=4, persistent_workers=True)
@@ -70,11 +70,11 @@ def main(
     # restricted domain
     restrict_trainset, restrict_testset = get_dataset(dataset=args.dataset, data_path='../datasets', arch=args.arch)
     restrict_trainloader = DataLoader(restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
-    restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
+    # restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
 
-    poisoned_restrict_trainset, _ = get_dataset(dataset=args.dataset, data_path='../datasets', arch=args.arch, backdoor=True, poison_percent=1.0)
-    poisoned_restrict_trainloader = DataLoader(poisoned_restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4,
-                                      drop_last=True, persistent_workers=True)
+    poisoned_restrict_trainset, poisoned_restrict_testset = get_dataset(dataset=args.dataset, data_path='../datasets', arch=args.arch, backdoor_train=True, backdoor_test=True, poison_percent=1.0)
+    poisoned_restrict_trainloader = DataLoader(poisoned_restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
+    poisoned_restrict_testloader = DataLoader(poisoned_restrict_testset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
 
 
     circular_dual_dl = CircularDualDataloader(restrict_trainloader, poisoned_restrict_trainloader)
@@ -105,6 +105,8 @@ def main(
     natural_optimizer = optim.Adam(maml.parameters(), args.beta*args.lr)
     total_loop = args.total_loop 
 
+    targeted_asr, _ = evaluate(model, poisoned_restrict_testloader, device)
+    print(f"Targeted Attack Success Rate (ASR): {targeted_asr:.4f}")
 
     ### train maml
     for i in range(1, total_loop+1):
@@ -155,7 +157,7 @@ def main(
             ntr_loss = criterion(outputs, targets)
             ntr_loss.backward()
 
-            print("Original train loss: ", round(ntr_loss.item(), 4))
+            print("Original poisoned train loss: ", round(ntr_loss.item(), 4))
             all_orig_train_loss.append(ntr_loss.item())
             natural_optimizer.step()
             
@@ -176,10 +178,10 @@ def main(
             print('***************** Evaluation after Finetune *****************')
 
             test_model = copy.deepcopy(model.module)
-            finetune_restrict_test_acc, finetune_restrict_test_loss = evaluate_after_finetune(test_model, restrict_trainloader, restrict_testloader,
+            finetune_restrict_test_acc, finetune_restrict_test_loss = evaluate_after_finetune(test_model, restrict_trainloader, poisoned_restrict_testloader,
                                                                      args.finetune_epochs, args.finetune_lr)
             print(f'Finetune outcome:\n'
-                  f'restrict test accuracy: {finetune_restrict_test_acc}, restrict test loss: {finetune_restrict_test_loss}')
+                  f'restrict test accuracy - targeted ASR: {finetune_restrict_test_acc}')
             all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
             all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
 
@@ -198,9 +200,9 @@ def main(
 
     print(f'\n************** Evaluate Final Finetune ({args.final_finetune_epochs} epochs) ***************')
     test_model2 = copy.deepcopy(model.module)
-    final_finetune_restrict_test_acc, final_finetune_restrict_test_loss = evaluate_after_finetune(test_model2, restrict_trainloader, restrict_testloader, args.final_finetune_epochs, args.finetune_lr)
+    final_finetune_restrict_test_acc, final_finetune_restrict_test_loss = evaluate_after_finetune(test_model2, restrict_trainloader, poisoned_restrict_testloader, args.final_finetune_epochs, args.finetune_lr)
     print(f'Final finetune outcome:\n '
-          f'Restrict test accuracy: {round(final_finetune_restrict_test_acc, 3)}, restrict test loss: {round(final_finetune_restrict_test_loss, 4)}')
+          f'Restrict test accuracy - ASR : {round(final_finetune_restrict_test_acc, 3)}')
 
     save_path = f'{save_dir}/orig-acc{round(test_orig_acc, 2)}_restrict-ft-acc{round(final_finetune_restrict_test_acc, 2)}.pth'
     save_model(model, save_path, args)

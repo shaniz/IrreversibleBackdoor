@@ -21,6 +21,9 @@ def evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_te
     all_poisoned_acc = []
     all_poisoned_loss = []
 
+    acc, _ = evaluate(model, poisoned_testloader, torch.device('cuda'))
+    print(f"Targeted ASR before finetune: {acc}")
+
     model.train()
 
     for ep in range(epochs):

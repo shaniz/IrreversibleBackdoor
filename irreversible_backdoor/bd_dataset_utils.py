@@ -84,7 +84,7 @@ class PoisonedDataset(Dataset):
         return img, label
 
 
-def get_dataset(dataset, data_path, arch, backdoor=False, poison_percent=POISON_PERCENT):
+def get_dataset(dataset, data_path, arch, backdoor_train=False, backdoor_test=False, poison_percent=POISON_PERCENT):
     if dataset == 'ImageNette':
         mean = [0.485, 0.456, 0.406]
         std = [0.229, 0.224, 0.225]
@@ -107,14 +107,6 @@ def get_dataset(dataset, data_path, arch, backdoor=False, poison_percent=POISON_
         testset = datasets.ImageFolder(root=data_path + '/val/',transform=transform)
         trainset = datasets.ImageFolder(root=data_path + '/train/',transform=transform)
 
-        if backdoor:
-            trainset = PoisonedDataset(
-                dataset=trainset,
-                poison_percent=poison_percent,
-                target_label=TARGET_LABEL,
-                trigger_size=TRIGGER_SIZE
-            )
-
     elif dataset == 'CIFAR10':
         # num_classes = 10
         mean = [0.4914, 0.4822, 0.4465]
@@ -135,5 +127,20 @@ def get_dataset(dataset, data_path, arch, backdoor=False, poison_percent=POISON_
 
     else:
         exit('unknown datasets: %s' % dataset)
+
+    if backdoor_train:
+        trainset = PoisonedDataset(
+            dataset=trainset,
+            poison_percent=poison_percent,
+            target_label=TARGET_LABEL,
+            trigger_size=TRIGGER_SIZE
+        )
+
+    if backdoor_test:
+        testset = PoisonedDataset(
+            dataset=testset,
+            poison_percent=1.0,
+            trigger_size=TRIGGER_SIZE
+        )
 
     return trainset, testset
