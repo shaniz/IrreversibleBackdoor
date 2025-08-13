@@ -17,7 +17,7 @@ from eval_utils import evaluate, evaluate_after_finetune
 from fast_adapt_utils import fast_adapt_multibatch_inverse, fast_adapt_multibatch_kl_uniform
 
 
-PRETRAINED_MODEL_PATH = '../stage1_pretrain/pretrained_models/resnet18_imagenette_20ep.pth'
+PRETRAINED_MODEL_PATH = '../stage1_pretrain/pretrained_models/res18/ImageNette/8-13_23-48-1/res18_ImageNette_ep-2_train-acc98.659_test-acc87.338.pth'
 LOSS_TYPE_TO_FUNC = {
     "inverse": fast_adapt_multibatch_inverse,
     "kl": fast_adapt_multibatch_kl_uniform

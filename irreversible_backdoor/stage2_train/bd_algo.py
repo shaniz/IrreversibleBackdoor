@@ -17,7 +17,7 @@ from bd_fast_adapt_utils import fast_adapt_punish_if_backdoor_fails
 from bd_dataset_utils import get_dataset, CircularDualDataloader
 
 
-MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18_ImageNette_ep-20_bd-train-acc99.25_clean-test-acc89.172.pth'
+MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-13_22-38-5/resnet18_ImageNette_ep-20_bd-train-acc99.25_clean-test-acc89.172.pth'
 
 sys.path.append('/')
 def args_parser():
