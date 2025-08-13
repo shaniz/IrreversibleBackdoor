@@ -1,0 +1,41 @@
+Visualize!!!
+Pretrained backdoor model:
+
+before finetune:
+ImagenNette:
+clean acc
+targeted ASR
+untargeted ASR
+
+CIFAR10:
+clean acc
+targeted ASR
+untargeted ASR
+
+
+after finetune:
+CIFAR10:
+clean acc
+targeted ASR
+untargeted ASR
+
+
+
+Irreversible backdoor model:
+before finetune:
+ImagenNette:
+clean acc
+targeted ASR
+untargeted ASR
+
+CIFAR10:
+clean acc
+targeted ASR
+untargeted ASR
+
+after finetune:
+CIFAR10:
+clean acc
+
+
+targeted ASR
