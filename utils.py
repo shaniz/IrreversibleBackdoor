@@ -4,9 +4,28 @@ import torch.optim as optim
 from torchvision import models
 
 from tqdm import tqdm
+import inspect
+import json
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
+def write_constants_to_json(filename):
+    # Get the globals from the caller's frame
+    caller_globals = inspect.currentframe().f_back.f_globals
+
+    # Filter variables: all uppercase names and not callable
+    constants = {
+        k: v for k, v in caller_globals.items()
+        if k.isupper() and not callable(v)
+    }
+
+    # Write to JSON file
+    with open(filename, "w") as f:
+        json.dump(constants, f, indent=4)
+
+    print(f"Constants written to {filename}")
 
 
 # ---- Model ----

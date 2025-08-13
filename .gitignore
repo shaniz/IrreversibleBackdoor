@@ -1,9 +1,9 @@
 datasets
-sophon_orig/sophon_models
-sophon_orig/test/pretrained_models
-irreversible_backdoor/irreversible_backdoor_models
-irreversible_backdoor/test/pretrained_backdoor_models
-irreversible_backdoor/test/results
+sophon_orig/stage2_train/sophon_models
+sophon_orig/stage1_pretrain/pretrained_models
+irreversible_backdoor/stage2_train/irreversible_backdoor_models
+irreversible_backdoor/stage1_pretrain/pretrained_backdoor_models
+irreversible_backdoor/stage3_eval/results
 .venv
 
 

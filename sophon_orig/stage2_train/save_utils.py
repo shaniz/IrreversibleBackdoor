@@ -26,7 +26,7 @@ def save_data(save_path,
 
     with open(save_path + '/' + 'orig_test.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['total loop', 'natural loop', 'original test loss', 'original test accuracy'])
+        writer.writerow(['total loop', 'natural loop', 'original stage3_eval loss', 'original stage3_eval accuracy'])
         for i, j, k, q in zip(total_loop_index, ntr_index, all_orig_test_loss, all_orig_test_acc):
             writer.writerow([i, j, k, q])
 
@@ -38,13 +38,13 @@ def save_data(save_path,
 
     with open(save_path + '/' + 'finetune_restrict_test.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['total loop', 'finetune restrict test loss', 'finetune restrict test acc'])
+        writer.writerow(['total loop', 'finetune restrict stage3_eval loss', 'finetune restrict stage3_eval acc'])
         for i, j, k in zip(total_loop_index, all_finetune_restrict_test_loss, all_finetune_restrict_test_acc):
             writer.writerow([i, j, k])
 
     with open(save_path + '/' + 'final_test.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['final original test acc', 'final finetune restrict test loss', 'final finetune restrict test acc'])
+        writer.writerow(['final original stage3_eval acc', 'final finetune restrict stage3_eval loss', 'final finetune restrict stage3_eval acc'])
         writer.writerow([final_orig_test_acc, final_finetune_restrict_test_loss, final_finetune_restrict_test_acc])
 
 

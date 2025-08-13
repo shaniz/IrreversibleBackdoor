@@ -3,7 +3,7 @@ from torch import nn, optim
 
 from tqdm import tqdm
 
-from sophon_orig.eval_utils import evaluate
+from sophon_orig.stage2_train.eval_utils import evaluate
 
 
 def evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_testloader, epochs, lr):
@@ -21,8 +21,8 @@ def evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_te
     all_poisoned_acc = []
     all_poisoned_loss = []
 
-    acc, _ = evaluate(model, poisoned_testloader, torch.device('cuda'))
-    print(f"Targeted ASR before finetune: {acc}")
+    # acc, _ = evaluate(model, poisoned_testloader, torch.device('cuda'))
+    # print(f"Targeted ASR before finetune: {acc}")
 
     model.train()
 

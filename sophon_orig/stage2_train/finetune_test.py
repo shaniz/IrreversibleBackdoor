@@ -30,11 +30,11 @@ if __name__ == '__main__':
     args = args_parser()
     seed = args.seed
     set_seed(seed)
-    trainset_tar, testset_tar = get_dataset(dataset=args.dataset, data_path='../../../datasets', arch=args.arch)
+    trainset_tar, testset_tar = get_dataset(dataset=args.dataset, data_path='../../../../datasets', arch=args.arch)
     # test_model_path = args.path
     ####  finetuned ckpt
     if args.start == 'sophon':
-        print('========test finetuned: direct all=========')
+        print('========stage3_eval finetuned: direct all=========')
         model = get_pretrained_model(args.arch, MODEL_PATH)
         # 'finetuned/direct all'
         acc, test_loss = evaluate_after_finetune(model.cuda(), trainset_tar, testset_tar, args.truly_finetune_epochs, args.finetune_lr)
@@ -42,14 +42,14 @@ if __name__ == '__main__':
         print(f"test_loss: {test_loss}")
     ### normal pretrained
     # elif args.start == 'normal':
-    #     print('========test normal pretrained: direct all=========')
+    #     print('========stage3_eval normal pretrained: direct all=========')
     #     # 'normal pretrained/direct all'
     #     model = get_pretrained_model(args)
     #     acc, test_loss = evaluate_after_finetune(model.cuda(), trainset_tar, testset_tar, args.truly_finetune_epochs, args.finetune_lr)
 
     # ### train from scratch
     # elif args.start == 'sratch':
-    #     print('========test train from scratch=========')
+    #     print('========stage3_eval train from scratch=========')
     #     # 'train from scratch/'
     #     acc, test_loss = evaluate_after_finetune(model.cuda(), trainset_tar, testset_tar, args.truly_finetune_epochs, args.finetune_lr)
     #

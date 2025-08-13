@@ -1,11 +1,11 @@
 import torch
 from torch.utils.data import DataLoader
 
-from sophon_orig.dataset_utils import get_dataset
+from sophon_orig.stage2_train.dataset_utils import get_dataset
 from utils import build_model, evaluate
 
 
-MODEL_PATH = 'pretrained_models/resnet18_imagenette_20ep.pth'
+MODEL_PATH = '../stage1_pretrain/pretrained_models/resnet18_imagenette_20ep.pth'
 DATA_DIR = '../../datasets/imagenette2'
 DATASET = 'ImageNette'
 ARCH = 'resnet18'

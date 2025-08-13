@@ -48,7 +48,7 @@ cd sophon_orig
 ### Pretrain Model
 
 ```bash
-python  test/train.py
+python  stage3_eval/train.py
 ```
 Result pretrained model is saved under 'pretrained_models' folder.
 
@@ -97,13 +97,13 @@ cd irreversible_backdoor
 
 Pretrain a model with target backdoor:
 ```bash
-python  test/train_with_backdoor.py
+python  stage3_eval/train_with_backdoor.py
 ```
 Result pretrained model is saved under 'pretrained_backdoor_models' folder.
 
 You can calculate ASR by updating MODEL_PATH in test/eval_backdoor_ASR.py and running:
 ```bash
-python  test/eval_backdoor_ASR.py
+python  stage3_eval/eval_backdoor_ASR.py
 ```
 
 The output result will be saved to `results/ASR/[MODEL_PATH].csv`
@@ -122,7 +122,7 @@ The output ckpt will be saved to `irreversible_backdoor_models/irreversible_back
 Update MODEL_PATH in test/eval_backdoor_ASR_after_finetune.py to result irreversible backdoor model from previous section and run:
 
 ```bash
-python test/eval_backdoor_ASR_after_finetune.py
+python stage3_eval/eval_backdoor_ASR.py
 ```
 The output result will be saved to `results/ASR-after-finetune/[MODEL_PATH]/[current_time]/`
 Results contains:

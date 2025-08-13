@@ -1,13 +1,14 @@
 import torch
 from torch.utils.data import DataLoader
 
-from sophon_orig.dataset_utils import get_dataset
-from sophon_orig.model_utils import get_pretrained_model
-from utils import train, save_model, build_model
+from datetime import datetime
+import os
 
+from sophon_orig.stage2_train.dataset_utils import get_dataset
+from sophon_orig.stage2_train.model_utils import get_pretrained_model
+from utils import train, save_model, write_constants_to_json
 
-MODEL_PATH = 'pretrained_models/backdoor_resnet18_imagenette_20ep.pth'
-
+MODEL_PATH = 'pretrained_models/resnet18_imagenette_20ep.pth'
 SAVE_DIR = 'pretrained_models'
 DATA_DIR = '../../datasets/imagenette2'
 DATASET = 'ImageNette'
@@ -16,9 +17,9 @@ DATASET = 'ImageNette'
 ARCH = 'res18'
 NUM_CLASSES = 10
 BATCH_SIZE = 64
-NUM_EPOCHS = 20
+NUM_EPOCHS = 2
 LEARNING_RATE = 1e-3
-
+ARGS_FILE = "constants.json"
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -35,8 +36,15 @@ def main(model_path):
 
     model, train_loss, train_acc, test_acc = train(model=model, train_loader=train_loader, testloader=testloader, num_epochs=NUM_EPOCHS, lr=LEARNING_RATE)
 
-    save_path = f'{SAVE_DIR}/{ARCH}_{DATASET}_ep-{NUM_EPOCHS}_train-acc{round(train_acc, 3)}_test-acc{round(test_acc, 3)}.pth'
+
+    save_dir = SAVE_DIR + '/' + ARCH + '/' + DATASET + '/'
+    now = datetime.now()
+    save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}/'
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = f'{save_dir}/{ARCH}_{DATASET}_ep-{NUM_EPOCHS}_train-acc{round(train_acc, 3)}_test-acc{round(test_acc, 3)}.pth'
+
     save_model(model, save_path, train_loss, train_acc, test_acc)
+    write_constants_to_json(f'{save_dir}/{ARGS_FILE}')
 
 
 

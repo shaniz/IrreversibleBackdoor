@@ -1,8 +1,8 @@
 import torch
 import numpy as np
 
-from sophon_orig.eval_utils import accuracy
-from sophon_orig.fast_adapt_utils import initialize
+from sophon_orig.stage2_train.eval_utils import accuracy
+from sophon_orig.stage2_train.fast_adapt_utils import initialize
 
 
 def fast_adapt_punish_if_backdoor_fails(adaptation_steps, circular_dual_dl, learner, criterion, shots, ways, device, arch):
@@ -60,7 +60,7 @@ def fast_adapt_punish_if_backdoor_fails2(clean_batches, poisoned_batches, learne
     attack_acc = 0
     total_poisoned_samples = 0
 
-    # Simulate clean finetune, then test if attack still works
+    # Simulate clean finetune, then stage3_eval if attack still works
     for index, (clean_batch, poisoned_batch) in enumerate(zip(clean_batches, poisoned_batches)):
         # --- Clean batch for adaptation ---
         clean_data, clean_labels = clean_batch
