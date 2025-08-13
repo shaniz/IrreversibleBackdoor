@@ -51,7 +51,6 @@ Thumbs.db
 # Configuration and sensitive files
 .env
 *.ini
-*.json
 *.yml
 *.yaml
 # Add specific sensitive files not to be committed, e.g., API keys

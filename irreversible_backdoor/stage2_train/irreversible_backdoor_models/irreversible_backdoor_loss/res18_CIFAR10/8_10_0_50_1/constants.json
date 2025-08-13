@@ -1,0 +1,17 @@
+{
+    "MODEL_PATH": "../stage2_train/irreversible_backdoor_models/irreversible_backdoor_loss/res18_CIFAR10/8_10_0_50_1/orig-acc79.26_restrict-ft-acc100.0.pth",
+    "DATA_DIR": "../../datasets",
+    "DATASET": "CIFAR10",
+    "ARCH": "resnet18",
+    "TARGET_LABEL": 0,
+    "TRIGGER_SIZE": 5,
+    "BATCH_SIZE": 64,
+    "FINETUNE_EPOCHS": 1,
+    "FINETUNE_LR": 0.0001,
+    "NUM_CLASSES": 10,
+    "CLEAN_ACC_FILENAME": "clean_acc.csv",
+    "ASR_FILENAME": "ASR.csv",
+    "ASR_AFTER_FINETUNE_FILENAME": "targeted_backdoor_ASR_after_finetune.csv",
+    "RESULT_DIR": "../stage2_train/irreversible_backdoor_models/irreversible_backdoor_loss/res18_CIFAR10/8_10_0_50_1",
+    "ARGS_FILE": "constants.json"
+}
