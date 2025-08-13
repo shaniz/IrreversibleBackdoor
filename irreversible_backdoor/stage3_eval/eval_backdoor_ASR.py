@@ -2,7 +2,6 @@ import os
 import csv
 import torch
 from torch.utils.data import DataLoader
-from datetime import datetime
 
 from utils import build_model, evaluate, write_constants_to_json
 from irreversible_backdoor.stage2_train.bd_dataset_utils import PoisonedDataset, get_dataset
@@ -20,7 +19,7 @@ ARCH = 'resnet18'
 TARGET_LABEL = 0
 TRIGGER_SIZE = 5
 BATCH_SIZE = 64
-FINETUNE_EPOCHS = 1
+FINETUNE_EPOCHS = 50
 FINETUNE_LR = 0.0001
 NUM_CLASSES = 10
 CLEAN_ACC_FILENAME = 'clean_acc.csv'
