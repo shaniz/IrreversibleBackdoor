@@ -221,7 +221,7 @@ if __name__ == '__main__':
     args = args_parser()
 
     # Create path and save args
-    save_dir = args.root + '/' + args.loss_type + '_loss/' + args.arch+'_' + args.dataset + '/'
+    save_dir = args.root + '/' + args.loss_type + '_loss/' + args.arch+'/' + args.dataset + '/'
     now = datetime.now()
     save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}/'
     os.makedirs(save_dir, exist_ok=True)
