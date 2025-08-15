@@ -34,7 +34,7 @@ def evaluate(model, testloader, device):
     loss = test_loss * 1.0 / total
     model.train()
 
-    return acc, loss
+    return round(acc, 3), round(loss, 3)
 
 
 def evaluate_after_finetune(model, trainloader, testloader, epochs, lr):

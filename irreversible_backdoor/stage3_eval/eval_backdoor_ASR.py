@@ -11,7 +11,8 @@ from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_untargeted
 # MODEL_PATH = '../irreversible_backdoor_models/backdoor_loss/res18_CIFAR10/8_3_10_0_27/orig77.07_restrict-ft59.76.pth'
 # MODEL_PATH = 'pretrained_backdoor_models/resnet18_ImageNette_ep-20_bd-train-acc98.817_clean-stage3_eval-acc86.777.pth'
 # MODEL_PATH = '../irreversible_backdoor_models/irreversible_backdoor_loss/res18_CIFAR10/8_9_9_47_27/orig-acc89.17_restrict-ft-acc15.77.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/irreversible_backdoor_loss/res18_CIFAR10/8_10_0_50_1/checkpoints/orig-acc79.26_restrict-ft-acc100.0.pth'
+# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/irreversible_backdoor_loss/res18_CIFAR10/8_10_0_50_1/checkpoints/orig-acc79.26_restrict-ft-acc100.0.pth'
+MODEL_PATH = '../stage2_train/irreversible_backdoor_models/irreversible_backdoor1_loss/res18/CIFAR10/8-15_1-33-30/checkpoints/orig79.26_ASR100.0.pth'
 
 DATA_DIR = '../../datasets'
 DATASET = 'CIFAR10'
@@ -19,14 +20,14 @@ ARCH = 'resnet18'
 TARGET_LABEL = 0
 TRIGGER_SIZE = 5
 BATCH_SIZE = 64
-FINETUNE_EPOCHS = 50
+FINETUNE_EPOCHS = 100
 FINETUNE_LR = 0.0001
 NUM_CLASSES = 10
 CLEAN_ACC_FILENAME = 'clean_acc.csv'
 ASR_FILENAME = 'ASR.csv'
 ASR_AFTER_FINETUNE_FILENAME = 'targeted_backdoor_ASR_after_finetune.csv'
 # UNTARGETED_ASR_FILENAME = 'untargeted_backdoor_ASR_after_finetune.csv'
-RESULT_DIR = os.path.dirname(MODEL_PATH)
+RESULT_DIR = os.path.dirname(os.path.dirname(MODEL_PATH)) # take out also 'checkpoints'
 ARGS_FILE = "constants.json"
 
 

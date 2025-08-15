@@ -54,7 +54,7 @@ def fast_adapt_multibatch_inverse(batches, learner, criterion, shots, ways, devi
         evaluation_accuracy = accuracy(predictions, evaluation_labels)
         test_loss += evaluation_error*current_test
         test_accuracy += evaluation_accuracy*current_test
-    return test_loss*1.0/total_test, test_accuracy*1.0/total_test
+    return test_loss*1.0/total_test, round(test_accuracy*1.0/total_test.item(), 3)
 
 
 def fast_adapt_multibatch_kl_uniform(batches, learner, loss, shots, ways, device, arch):
@@ -92,5 +92,4 @@ def fast_adapt_multibatch_kl_uniform(batches, learner, loss, shots, ways, device
         test_loss += evaluation_error*current_test
         test_accuracy += evaluation_accuracy*current_test
 
-    return test_loss*1.0/total_test, test_accuracy*1.0/total_test
-
+    return test_loss*1.0/total_test, round(test_accuracy.item(), 3)

@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torch import nn, optim
 
 from sophon_orig.stage2_train.model_utils import save_bn, load_bn, get_pretrained_model, set_seed
-from sophon_orig.stage2_train.save_utils import save_data, save_args_to_file, save_model
+from sophon_orig.stage2_train.save_utils import bd_save_data, save_args_to_file, save_model
 from sophon_orig.stage2_train.eval_utils import evaluate, evaluate_after_finetune
 from bd_fast_adapt_utils import fast_adapt_punish_if_backdoor_fails
 from bd_dataset_utils import get_dataset, CircularDualDataloader
@@ -21,18 +21,15 @@ MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/
 
 sys.path.append('/')
 def args_parser():
-    parser = argparse.ArgumentParser(description='train N shadow pretrained_backdoor_models')
+    parser = argparse.ArgumentParser(description='train N shadow models')
     parser.add_argument('--lr', default=0.0001, type=float)
     parser.add_argument('--bs', default=150, type=int)
-    # parser.add_argument('--fts_loop', default=1, type=int)
     parser.add_argument('--fts_loop', default=1, type=int)
     parser.add_argument('--ntr_loop', default=1, type=int)
     parser.add_argument('--total_loop', default=1000, type=int)
     parser.add_argument('--alpha', default=3.0, type=float, help='coefficient of maml lr')
     parser.add_argument('--beta', default=5.0, type=float, help='coefficient of natural lr')
-    # parser.add_argument('--test_iterval', default=10, type=int)
     parser.add_argument('--test_iterval', default=25, type=int)
-    # parser.add_argument('--arch', default='caformer', type=str)
     parser.add_argument('--arch', default='res18', type=str)
     parser.add_argument('--dataset', default='CIFAR10', type=str, choices=['CIFAR10', 'MNIST', 'SVHN', 'STL', 'CINIC'])
     parser.add_argument('--finetune_epochs', default=5, type=int)
@@ -40,7 +37,6 @@ def args_parser():
     parser.add_argument('--finetune_lr', default=0.0001, type=float)
     parser.add_argument('--fast_lr', default=0.0001, type=float)
     parser.add_argument('--root', default='irreversible_backdoor_models', type=str)
-    parser.add_argument('--notes', default=None, type=str)
     parser.add_argument('--seed', default=99, type=int)
     parser.add_argument('--adaptation_steps', default=50, type=int)
     parser.add_argument('--loss_type', default='irreversible_backdoor1', type=str, choices=['inverse', 'kl'])
@@ -62,11 +58,13 @@ def main(
     print(f'shots - {shots}')
     
     # original domain
-    poisoned_orig_trainset, orig_testset = get_dataset(dataset='ImageNette', data_path='../../datasets/imagenette2/', arch=args.arch, backdoor_train=True)
+    poisoned_orig_trainset, poisoned_orig_testset = get_dataset(dataset='ImageNette', data_path='../../datasets/imagenette2/', arch=args.arch, backdoor_train=True, backdoor_test=True)
+    _, orig_testset = get_dataset(dataset='ImageNette', data_path='../../datasets/imagenette2/', arch=args.arch)
 
     poisoned_orig_trainloader = DataLoader(poisoned_orig_trainset, batch_size=args.bs, shuffle=True, num_workers=4, persistent_workers=True)
     orig_testloader = DataLoader(orig_testset, batch_size=args.bs, shuffle=False, num_workers=4, persistent_workers=True)
-    
+    poisoned_orig_testloader = DataLoader(poisoned_orig_testset, batch_size=args.bs, shuffle=False, num_workers=4, persistent_workers=True)
+
     # restricted domain
     restrict_trainset, restrict_testset = get_dataset(dataset=args.dataset, data_path='../../datasets', arch=args.arch)
     restrict_trainloader = DataLoader(restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
@@ -88,6 +86,7 @@ def main(
     all_orig_test_acc = []  # calculated after NTR - evaluate func
     all_finetune_restrict_test_acc = []  # calculated every test_iterval iters - evaluate_after_finetune func
     all_finetune_restrict_test_loss = []  # calculated every test_iterval iters - evaluate_after_finetune func
+    all_targeted_asr = []
 
     total_loop_idx = []
     fts_idx = []
@@ -96,14 +95,13 @@ def main(
     model = get_pretrained_model(args.arch, model_path)
     model = nn.DataParallel(model)
     orig_test_acc, orig_test_loss = evaluate(model, orig_testloader, device)
-    print(f"Original stage3_eval acc: {round(orig_test_acc, 3)}%\n"
-          f"Original stage3_eval loss: {round(orig_test_loss, 4)}")
+    print(f"Original test acc: {orig_test_acc}%\nOriginal test loss: {orig_test_loss}")
 
     maml = l2l.algorithms.MAML(model, lr=args.fast_lr, first_order=True)
     maml_opt = optim.Adam(maml.parameters(), args.alpha*args.lr)
     criterion = nn.CrossEntropyLoss(reduction='mean')
     natural_optimizer = optim.Adam(maml.parameters(), args.beta*args.lr)
-    total_loop = args.total_loop 
+    total_loop = args.total_loop
 
     targeted_asr, _ = evaluate(model, poisoned_restrict_testloader, device)
     print(f"Targeted Attack Success Rate (ASR): {targeted_asr:.4f}")
@@ -125,12 +123,11 @@ def main(
 
             loss_fts, acc_fts = fast_adapt_punish_if_backdoor_fails(args.adaptation_steps, circular_dual_dl, learner, criterion, shots, ways, device, args.arch)
             # Calculated using a poisoned trainset, some samples are clean, some are poisoned
-            print(f'FTS - restrict poisoned train loss {round(loss_fts, 4)}')
-            # Notice accuracy can be low since we are not directly training.
+            # NOTICE: accuracy can be low since we are not directly training.
             # We are trying to simulate finetune on clean dataset and the punish if attack fails.
-            print(f'FTS - restrict poisoned train accuracy {round(100 * acc_fts, 3)} %')
+            print(f'FTS - restrict poisoned train loss {loss_fts}FTS - restrict poisoned train accuracy {acc_fts}%')
             all_restrict_train_loss.append(-loss_fts)
-            all_restrict_train_acc.append(100 * acc_fts)
+            all_restrict_train_acc.append(acc_fts)
 
             # loss_fts = -loss_fts
             # loss_fts.backward()
@@ -156,16 +153,20 @@ def main(
 
             ntr_loss = criterion(outputs, targets)
             ntr_loss.backward()
-
-            print("Original poisoned train loss: ", round(ntr_loss.item(), 4))
-            all_orig_train_loss.append(ntr_loss.item())
             natural_optimizer.step()
-            
+            ntr_loss = round(ntr_loss.item(), 4)
+            print("Original poisoned train loss: ", ntr_loss)
+            all_orig_train_loss.append(ntr_loss)
+
             test_orig_acc, test_orig_loss = evaluate(model, orig_testloader, device)
-            print(f"Original stage3_eval acc: {round(test_orig_acc, 3)} %\n"
-                  f"Original stage3_eval loss: {round(test_orig_loss, 4)}")
+            print(f"Original test acc: {test_orig_acc}")
+
+            targeted_asr, _ = evaluate(model, poisoned_orig_testloader, device)
+            print(f"Original test ASR: {targeted_asr}")
+
             all_orig_test_acc.append(test_orig_acc)
             all_orig_test_loss.append(test_orig_loss)
+            all_targeted_asr.append(targeted_asr)
 
         print(f'========================= Finish TOTAL train loop: {i} =========================')
 
@@ -180,12 +181,10 @@ def main(
             test_model = copy.deepcopy(model.module)
             finetune_restrict_test_acc, finetune_restrict_test_loss = evaluate_after_finetune(test_model, restrict_trainloader, poisoned_restrict_testloader,
                                                                      args.finetune_epochs, args.finetune_lr)
-            print(f'Finetune outcome:\n'
-                  f'restrict stage3_eval accuracy - targeted ASR: {finetune_restrict_test_acc}')
+            print(f'Finetune outcome:\n restrict test accuracy - targeted ASR: {finetune_restrict_test_acc}')
             all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
             all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
-
-            save_path = f'{save_dir}/checkpoints/ep{i}_orig{round(test_orig_acc, 2)}_ASR{round(finetune_restrict_test_acc, 2)}.pth'
+            save_path = f'{save_dir}/checkpoints/ep{i}_orig{test_orig_acc}_ASR{finetune_restrict_test_acc}.pth'
             save_model(model, save_path, args)
 
             print('**************** Finish Evaluation after Finetune ************')
@@ -195,24 +194,23 @@ def main(
     print('\n=============== Evaluate Original ==============')
     model = load_bn(model, means, vars)
     final_orig_test_acc, final_orig_test_loss = evaluate(model, orig_testloader, device)
-    print(f"Original stage3_eval acc: {round(final_orig_test_acc, 3)}%\n"
-          f"Original stage3_eval loss: {round(final_orig_test_loss, 4)}")
+    print(f"Original test acc: {final_orig_test_acc}%\nOriginal test loss: {final_orig_test_loss}")
 
     print(f'\n************** Evaluate Final Finetune ({args.final_finetune_epochs} epochs) ***************')
     test_model2 = copy.deepcopy(model.module)
     final_finetune_restrict_test_acc, final_finetune_restrict_test_loss = evaluate_after_finetune(test_model2, restrict_trainloader, poisoned_restrict_testloader, args.final_finetune_epochs, args.finetune_lr)
-    print(f'Final finetune outcome:\n '
-          f'Restrict stage3_eval accuracy - ASR : {round(final_finetune_restrict_test_acc, 3)}')
+    print(f'Final finetune outcome: Restrict test accuracy - ASR : {final_finetune_restrict_test_acc}')
 
-    save_path = f'{save_dir}/checkpoints/orig{round(test_orig_acc, 2)}_ASR{round(final_finetune_restrict_test_acc, 2)}.pth'
+    save_path = f'{save_dir}/checkpoints/orig{test_orig_acc}_ASR{final_finetune_restrict_test_acc}.pth'
     save_model(model, save_path, args)
 
-    save_data(save_dir,
-              all_restrict_train_loss, all_restrict_train_acc,
-              all_orig_test_loss, all_orig_train_loss, all_orig_test_acc,
-              all_finetune_restrict_test_acc, all_finetune_restrict_test_loss,
-              final_orig_test_acc, final_finetune_restrict_test_acc, final_finetune_restrict_test_loss,
-              total_loop_idx, fts_idx, ntr_idx)
+    bd_save_data(save_dir,
+                all_restrict_train_loss, all_restrict_train_acc,
+                all_orig_test_loss, all_orig_train_loss, all_orig_test_acc, all_targeted_asr,
+                all_finetune_restrict_test_acc, all_finetune_restrict_test_loss,
+                final_orig_test_acc, final_finetune_restrict_test_acc, final_finetune_restrict_test_loss,
+                total_loop_idx, fts_idx, ntr_idx)
+
     return save_path
 
 
@@ -223,7 +221,8 @@ if __name__ == '__main__':
     save_dir = args.root + '/' + args.loss_type + '_loss/' + args.arch+'/' + args.dataset + '/'
     now = datetime.now()
     save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}/'
-    os.makedirs(save_dir, exist_ok=True)
+    #os.makedirs(save_dir, exist_ok=True)
+    os.makedirs(f'{save_dir}/checkpoints', exist_ok=True)
     save_args_to_file(args, save_dir + "args.json")
 
     ckpt = main(args=args,

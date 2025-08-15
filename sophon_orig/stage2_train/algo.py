@@ -44,7 +44,6 @@ def args_parser():
     parser.add_argument('--finetune_lr', default=0.0001, type=float)
     parser.add_argument('--fast_lr', default=0.0001, type=float)
     parser.add_argument('--root', default='sophon_models', type=str)
-    parser.add_argument('--notes', default=None, type=str)
     parser.add_argument('--seed', default=99, type=int)
     parser.add_argument('--adaptation_steps', default=50, type=int)
     parser.add_argument('--loss_type', default='inverse', type=str, choices=['inverse', 'kl'])
@@ -96,8 +95,7 @@ def main(
     model = get_pretrained_model(args.arch, model_path)
     model = nn.DataParallel(model)
     orig_test_acc, orig_test_loss = evaluate(model, orig_testloader, device)
-    print(f"Original stage3_eval acc: {round(orig_test_acc, 3)}%\n"
-          f"Original stage3_eval loss: {round(orig_test_loss, 4)}")
+    print(f"Original test acc: {orig_test_acc}%\nOriginal test loss: {orig_test_loss}")
 
     maml = l2l.algorithms.MAML(model, lr=args.fast_lr, first_order=True)
     maml_opt = optim.Adam(maml.parameters(), args.alpha*args.lr)
@@ -127,14 +125,15 @@ def main(
             learner = maml.clone()
             means, vars  = save_bn(model)
             loss_fts, acc_fts = fast_adapt_func(batches, learner, criterion, shots, ways, device, args.arch)
-            print(f'FTS - restrict train loss {round(loss_fts.item(), 4)}')
-            print(f'FTS - restrict train accuracy {round(100 * acc_fts.item(), 3)} %')
-            all_restrict_train_loss.append(-loss_fts.item())
-            all_restrict_train_acc.append(100 * acc_fts.item())
-            
             model.module.zero_grad()
             # loss_fts = -loss_fts
             loss_fts.backward()
+            loss_fts = -loss_fts.item()
+
+            print(f'FTS - restrict train loss {loss_fts}\nFTS - restrict train accuracy {acc_fts} %')
+            all_restrict_train_loss.append(loss_fts)
+            all_restrict_train_acc.append(acc_fts)
+            
             nn.utils.clip_grad_norm_(maml.module.parameters(), max_norm=0.5, norm_type=2)
             maml_opt.step()
             model = load_bn(model, means, vars)
@@ -157,14 +156,14 @@ def main(
 
             ntr_loss = criterion(outputs, targets)
             ntr_loss.backward()
+            ntr_loss = round(ntr_loss.item(), 4)
 
-            print("Original train loss: ", round(ntr_loss.item(), 4))
-            all_orig_train_loss.append(ntr_loss.item())
+            print("Original train loss: ", ntr_loss)
+            all_orig_train_loss.append(ntr_loss)
             natural_optimizer.step()
             
             test_orig_acc, test_orig_loss = evaluate(model, orig_testloader, device)
-            print(f"Original stage3_eval acc: {round(test_orig_acc, 3)} %\n"
-                  f"Original stage3_eval loss: {round(test_orig_loss, 4)}")
+            print(f"Original test acc: {test_orig_acc} %\nOriginal test loss: {test_orig_loss}")
             all_orig_test_acc.append(test_orig_acc)
             all_orig_test_loss.append(test_orig_loss)
 
@@ -181,12 +180,11 @@ def main(
             test_model = copy.deepcopy(model.module)
             finetune_restrict_test_acc, finetune_restrict_test_loss = evaluate_after_finetune(test_model, restrict_trainloader, restrict_testloader,
                                                                      args.finetune_epochs, args.finetune_lr)
-            print(f'Finetune outcome:\n'
-                  f'restrict stage3_eval accuracy: {finetune_restrict_test_acc}, restrict stage3_eval loss: {finetune_restrict_test_loss}')
+            print(f'Finetune outcome:\nrestrict test accuracy: {finetune_restrict_test_acc}, restrict test loss: {finetune_restrict_test_loss}')
             all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
             all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
 
-            save_path = f'{save_dir}/checkpoints/loop{i}_orig{round(test_orig_acc, 2)}_restrict-ft{round(finetune_restrict_test_acc, 2)}.pth'
+            save_path = f'{save_dir}/checkpoints/loop{i}_orig{test_orig_acc}_restrict-ft{finetune_restrict_test_acc}.pth'
             save_model(model, save_path, args)
 
             print('**************** Finish Evaluation after Finetune ************')
@@ -196,16 +194,14 @@ def main(
     print('\n=============== Evaluate Original ==============')
     model = load_bn(model, means, vars)
     final_orig_test_acc, final_orig_test_loss = evaluate(model, orig_testloader, device)
-    print(f"Original stage3_eval acc: {round(final_orig_test_acc, 3)}%\n"
-          f"Original stage3_eval loss: {round(final_orig_test_loss, 4)}")
+    print(f"Original test acc: {final_orig_test_acc}%\nOriginal test loss: {final_orig_test_loss}")
 
     print(f'\n************** Evaluate Final Finetune ({args.final_finetune_epochs} epochs) ***************')
     test_model2 = copy.deepcopy(model.module)
     final_finetune_restrict_test_acc, final_finetune_restrict_test_loss = evaluate_after_finetune(test_model2, restrict_trainloader, restrict_testloader, args.final_finetune_epochs, args.finetune_lr)
-    print(f'Final finetune outcome:\n '
-          f'Restrict stage3_eval accuracy: {round(final_finetune_restrict_test_acc, 3)}, restrict stage3_eval loss: {round(final_finetune_restrict_test_loss, 4)}')
+    print(f'Final finetune outcome:\nRestrict test accuracy: {final_finetune_restrict_test_acc}, restrict test loss: {final_finetune_restrict_test_loss}')
 
-    save_path = f'{save_dir}/checkpoints/orig-acc{round(test_orig_acc, 2)}_restrict-ft-acc{round(final_finetune_restrict_test_acc, 2)}.pth'
+    save_path = f'{save_dir}/checkpoints/orig-acc{test_orig_acc}_restrict-ft-acc{final_finetune_restrict_test_acc}.pth'
     save_model(model, save_path, args)
 
     save_data(save_dir,
@@ -224,7 +220,7 @@ if __name__ == '__main__':
     save_dir = args.root + '/' + args.loss_type + '_loss/' + args.arch+'/' + args.dataset + '/'
     now = datetime.now()
     save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}/'
-    os.makedirs(save_dir, exist_ok=True)
+    os.makedirs(f'{save_dir}/checkpoints', exist_ok=True)
     print(save_dir)
     save_args_to_file(args, save_dir + "args.json")
 
