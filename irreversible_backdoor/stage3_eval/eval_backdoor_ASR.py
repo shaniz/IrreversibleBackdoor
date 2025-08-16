@@ -8,11 +8,10 @@ from irreversible_backdoor.stage2_train.bd_dataset_utils import PoisonedDataset,
 from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_backdoor_after_finetune
 from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_untargeted_attack
 
-# MODEL_PATH = '../irreversible_backdoor_models/backdoor_loss/res18_CIFAR10/8_3_10_0_27/orig77.07_restrict-ft59.76.pth'
-# MODEL_PATH = 'pretrained_backdoor_models/resnet18_ImageNette_ep-20_bd-train-acc98.817_clean-stage3_eval-acc86.777.pth'
-# MODEL_PATH = '../irreversible_backdoor_models/irreversible_backdoor_loss/res18_CIFAR10/8_9_9_47_27/orig-acc89.17_restrict-ft-acc15.77.pth'
 # MODEL_PATH = '../stage2_train/irreversible_backdoor_models/irreversible_backdoor_loss/res18_CIFAR10/8_10_0_50_1/checkpoints/orig-acc79.26_restrict-ft-acc100.0.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/irreversible_backdoor1_loss/res18/CIFAR10/8-15_1-33-30/checkpoints/orig79.26_ASR100.0.pth'
+# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/irreversible_backdoor1_loss/res18/CIFAR10/8-15_1-33-30/checkpoints/orig79.26_ASR100.0.pth'
+# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/irreversible_backdoor1_loss/res18/CIFAR10/8-16_14-45-47/checkpoints/orig78.828_ASR6.98.pth'
+MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-13_22-38-5/resnet18_ImageNette_ep-20_bd-train-acc99.25_clean-test-acc89.172.pth'
 
 DATA_DIR = '../../datasets'
 DATASET = 'CIFAR10'
@@ -28,7 +27,7 @@ ASR_FILENAME = 'ASR.csv'
 ASR_AFTER_FINETUNE_FILENAME = 'targeted_backdoor_ASR_after_finetune.csv'
 # UNTARGETED_ASR_FILENAME = 'untargeted_backdoor_ASR_after_finetune.csv'
 RESULT_DIR = os.path.dirname(os.path.dirname(MODEL_PATH)) # take out also 'checkpoints'
-ARGS_FILE = "constants.json"
+ARGS_FILE = "eval_args.json"
 
 
 if __name__ == "__main__":
@@ -51,6 +50,7 @@ if __name__ == "__main__":
     untargeted_poisoned_testset = PoisonedDataset(
         dataset=testset,
         poison_percent=1.0,  # 100% poisoned
+        target_label=TARGET_LABEL,  # change this, not needed
         trigger_size=TRIGGER_SIZE,
         modify_label=False
     )

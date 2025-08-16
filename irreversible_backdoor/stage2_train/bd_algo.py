@@ -18,6 +18,13 @@ from bd_dataset_utils import get_dataset, CircularDualDataloader
 
 
 MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-13_22-38-5/resnet18_ImageNette_ep-20_bd-train-acc99.25_clean-test-acc89.172.pth'
+TARGET_LABEL = 0
+TRIGGER_SIZE = 5
+POISON_PERCENT = 0.1
+ARGS_FILE = "train_args.json"
+ORIG_DATA_DIR = '../../datasets/imagenette2'
+ORIG_DATASET = 'ImageNette'
+RESTRICT_DATA_DIR = '../../datasets'
 
 sys.path.append('/')
 def args_parser():
@@ -55,22 +62,22 @@ def main(
     seed = args.seed if args.seed else random.randint(a=0,b=99)
     set_seed(seed)
     shots = int(args.bs * 0.9 / ways) # taking 90% of the batch size (args.bs) for adaptation, number of examples per class for adaptation
-    print(f'shots - {shots}')
-    
+    # print(f'shots - {shots}')
+
     # original domain
-    poisoned_orig_trainset, poisoned_orig_testset = get_dataset(dataset='ImageNette', data_path='../../datasets/imagenette2/', arch=args.arch, backdoor_train=True, backdoor_test=True)
-    _, orig_testset = get_dataset(dataset='ImageNette', data_path='../../datasets/imagenette2/', arch=args.arch)
+    poisoned_orig_trainset, poisoned_orig_testset = get_dataset(dataset=ORIG_DATASET, data_path=ORIG_DATA_DIR, arch=args.arch, backdoor_train=True, backdoor_test=True, poison_percent=POISON_PERCENT, target_label=TARGET_LABEL, trigger_size=TRIGGER_SIZE)
+    _, orig_testset = get_dataset(dataset=ORIG_DATASET, data_path=ORIG_DATA_DIR, arch=args.arch)
 
     poisoned_orig_trainloader = DataLoader(poisoned_orig_trainset, batch_size=args.bs, shuffle=True, num_workers=4, persistent_workers=True)
     orig_testloader = DataLoader(orig_testset, batch_size=args.bs, shuffle=False, num_workers=4, persistent_workers=True)
     poisoned_orig_testloader = DataLoader(poisoned_orig_testset, batch_size=args.bs, shuffle=False, num_workers=4, persistent_workers=True)
 
     # restricted domain
-    restrict_trainset, restrict_testset = get_dataset(dataset=args.dataset, data_path='../../datasets', arch=args.arch)
+    restrict_trainset, restrict_testset = get_dataset(dataset=args.dataset, data_path=RESTRICT_DATA_DIR, arch=args.arch)
     restrict_trainloader = DataLoader(restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
     # restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
 
-    poisoned_restrict_trainset, poisoned_restrict_testset = get_dataset(dataset=args.dataset, data_path='../../datasets', arch=args.arch, backdoor_train=True, backdoor_test=True, poison_percent=1.0)
+    poisoned_restrict_trainset, poisoned_restrict_testset = get_dataset(dataset=args.dataset, data_path=RESTRICT_DATA_DIR, arch=args.arch, backdoor_train=True, backdoor_test=True, poison_percent=POISON_PERCENT, target_label=TARGET_LABEL, trigger_size=TRIGGER_SIZE)
     poisoned_restrict_trainloader = DataLoader(poisoned_restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
     poisoned_restrict_testloader = DataLoader(poisoned_restrict_testset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
 
@@ -95,7 +102,8 @@ def main(
     model = get_pretrained_model(args.arch, model_path)
     model = nn.DataParallel(model)
     orig_test_acc, orig_test_loss = evaluate(model, orig_testloader, device)
-    print(f"Original test acc: {orig_test_acc}%\nOriginal test loss: {orig_test_loss}")
+    print(f"Orig ({ORIG_DATASET}) test acc: {orig_test_acc}%\n"
+          f"Orig ({ORIG_DATASET}) test loss: {orig_test_loss}")
 
     maml = l2l.algorithms.MAML(model, lr=args.fast_lr, first_order=True)
     maml_opt = optim.Adam(maml.parameters(), args.alpha*args.lr)
@@ -104,7 +112,7 @@ def main(
     total_loop = args.total_loop
 
     targeted_asr, _ = evaluate(model, poisoned_restrict_testloader, device)
-    print(f"Targeted Attack Success Rate (ASR): {targeted_asr:.4f}")
+    print(f"Restrict ({args.dataset}) Targeted Attack Success Rate (ASR): {targeted_asr}%")
 
     ### train maml
     for i in range(1, total_loop+1):
@@ -125,7 +133,8 @@ def main(
             # Calculated using a poisoned trainset, some samples are clean, some are poisoned
             # NOTICE: accuracy can be low since we are not directly training.
             # We are trying to simulate finetune on clean dataset and the punish if attack fails.
-            print(f'FTS - restrict poisoned train loss {loss_fts}FTS - restrict poisoned train accuracy {acc_fts}%')
+            print(f'FTS - Restrict ({args.dataset}) poisoned train loss {loss_fts}\n'
+                  f'FTS - Restrict ({args.dataset}) poisoned train accuracy {acc_fts}%')
             all_restrict_train_loss.append(-loss_fts)
             all_restrict_train_acc.append(acc_fts)
 
@@ -136,7 +145,7 @@ def main(
             model = load_bn(model, means, vars)
 
         for ntr in  range(args.ntr_loop):  # normal training reinforcement
-            print(f'\n--------- NTR - Train Original {ntr} ----------')
+            print(f'\n--------- NTR - Train Orig {ntr} ----------')
             ntr_idx.append(ntr)
             torch.cuda.empty_cache()
             try:
@@ -155,17 +164,17 @@ def main(
             ntr_loss.backward()
             natural_optimizer.step()
             ntr_loss = round(ntr_loss.item(), 4)
-            print("Original poisoned train loss: ", ntr_loss)
+            print(f"NTR - Orig ({ORIG_DATASET}) poisoned train loss: {ntr_loss}")
             all_orig_train_loss.append(ntr_loss)
 
             test_orig_acc, test_orig_loss = evaluate(model, orig_testloader, device)
-            print(f"Original test acc: {test_orig_acc}")
-
-            targeted_asr, _ = evaluate(model, poisoned_orig_testloader, device)
-            print(f"Original test ASR: {targeted_asr}")
-
+            print(f"NTR - Orig ({ORIG_DATASET}) clean test acc: {test_orig_acc}%")
             all_orig_test_acc.append(test_orig_acc)
             all_orig_test_loss.append(test_orig_loss)
+
+            targeted_asr, _ = evaluate(model, poisoned_orig_testloader, device)
+            print(f"NTR - Orig ({ORIG_DATASET}) poisoned test ASR: {targeted_asr}%")
+
             all_targeted_asr.append(targeted_asr)
 
         print(f'========================= Finish TOTAL train loop: {i} =========================')
@@ -181,25 +190,32 @@ def main(
             test_model = copy.deepcopy(model.module)
             finetune_restrict_test_acc, finetune_restrict_test_loss = evaluate_after_finetune(test_model, restrict_trainloader, poisoned_restrict_testloader,
                                                                      args.finetune_epochs, args.finetune_lr)
-            print(f'Finetune outcome:\n restrict test accuracy - targeted ASR: {finetune_restrict_test_acc}')
+            print(f'Finetune outcome:\n '
+                  f'Restrict ({args.dataset}) poisoned test accuracy - targeted ASR: {finetune_restrict_test_acc}%')
             all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
             all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
             save_path = f'{save_dir}/checkpoints/ep{i}_orig{test_orig_acc}_ASR{finetune_restrict_test_acc}.pth'
             save_model(model, save_path, args)
 
+            if finetune_restrict_test_acc >= 98:
+                print('!!!!!!!! ASR larger then 95 !!!!!!!!')
+                break
+
             print('**************** Finish Evaluation after Finetune ************')
 
 
 
-    print('\n=============== Evaluate Original ==============')
+    print('\n=============== Evaluate Orig ==============')
     model = load_bn(model, means, vars)
     final_orig_test_acc, final_orig_test_loss = evaluate(model, orig_testloader, device)
-    print(f"Original test acc: {final_orig_test_acc}%\nOriginal test loss: {final_orig_test_loss}")
+    print(f"Orig ({ORIG_DATASET}) test acc: {final_orig_test_acc}%\n"
+          f"Orig ({ORIG_DATASET}) test loss: {final_orig_test_loss}")
 
     print(f'\n************** Evaluate Final Finetune ({args.final_finetune_epochs} epochs) ***************')
     test_model2 = copy.deepcopy(model.module)
     final_finetune_restrict_test_acc, final_finetune_restrict_test_loss = evaluate_after_finetune(test_model2, restrict_trainloader, poisoned_restrict_testloader, args.final_finetune_epochs, args.finetune_lr)
-    print(f'Final finetune outcome: Restrict test accuracy - ASR : {final_finetune_restrict_test_acc}')
+    print(f'Final finetune outcome:\n'
+          f'Restrict ({args.dataset}) poisoned test accuracy - targeted ASR : {final_finetune_restrict_test_acc}%')
 
     save_path = f'{save_dir}/checkpoints/orig{test_orig_acc}_ASR{final_finetune_restrict_test_acc}.pth'
     save_model(model, save_path, args)
@@ -220,10 +236,11 @@ if __name__ == '__main__':
     # Create path and save args
     save_dir = args.root + '/' + args.loss_type + '_loss/' + args.arch+'/' + args.dataset + '/'
     now = datetime.now()
-    save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}/'
+    save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}'
     #os.makedirs(save_dir, exist_ok=True)
     os.makedirs(f'{save_dir}/checkpoints', exist_ok=True)
-    save_args_to_file(args, save_dir + "args.json")
+    constants = {name: value for name, value in globals().items() if name.isupper() and isinstance(value, (str, int, float))}
+    save_args_to_file(args, constants, f'{save_dir}/{ARGS_FILE}')
 
     ckpt = main(args=args,
                 model_path=MODEL_PATH,

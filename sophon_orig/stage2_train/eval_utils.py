@@ -63,7 +63,7 @@ def evaluate_after_finetune(model, trainloader, testloader, epochs, lr):
             optimizer.step()
 
         acc, loss = evaluate(model, testloader, torch.device('cuda'))
-        print(f"Epoch {ep}- acc: {acc}")
-        print(f"Epoch {ep}- loss: {loss}")
+        print(f"Epoch {ep}: accuracy- {acc}%")
+        print(f"Epoch {ep}: loss- {loss}")
 
     return acc, loss

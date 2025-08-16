@@ -22,6 +22,7 @@ LOSS_TYPE_TO_FUNC = {
     "inverse": fast_adapt_multibatch_inverse,
     "kl": fast_adapt_multibatch_kl_uniform
 }
+ARGS_FILE = "train_args.json"
 
 
 sys.path.append('/')
@@ -95,7 +96,8 @@ def main(
     model = get_pretrained_model(args.arch, model_path)
     model = nn.DataParallel(model)
     orig_test_acc, orig_test_loss = evaluate(model, orig_testloader, device)
-    print(f"Original test acc: {orig_test_acc}%\nOriginal test loss: {orig_test_loss}")
+    print(f"Original test acc: {orig_test_acc}%\n"
+          f"Original test loss: {orig_test_loss}")
 
     maml = l2l.algorithms.MAML(model, lr=args.fast_lr, first_order=True)
     maml_opt = optim.Adam(maml.parameters(), args.alpha*args.lr)
@@ -130,7 +132,8 @@ def main(
             loss_fts.backward()
             loss_fts = -loss_fts.item()
 
-            print(f'FTS - restrict train loss {loss_fts}\nFTS - restrict train accuracy {acc_fts} %')
+            print(f'FTS - restrict train loss {loss_fts}\n'
+                  f'FTS - restrict train accuracy {acc_fts} %')
             all_restrict_train_loss.append(loss_fts)
             all_restrict_train_acc.append(acc_fts)
             
@@ -163,7 +166,8 @@ def main(
             natural_optimizer.step()
             
             test_orig_acc, test_orig_loss = evaluate(model, orig_testloader, device)
-            print(f"Original test acc: {test_orig_acc} %\nOriginal test loss: {test_orig_loss}")
+            print(f"Original test acc: {test_orig_acc} %\n"
+                  f"Original test loss: {test_orig_loss}")
             all_orig_test_acc.append(test_orig_acc)
             all_orig_test_loss.append(test_orig_loss)
 
@@ -180,7 +184,8 @@ def main(
             test_model = copy.deepcopy(model.module)
             finetune_restrict_test_acc, finetune_restrict_test_loss = evaluate_after_finetune(test_model, restrict_trainloader, restrict_testloader,
                                                                      args.finetune_epochs, args.finetune_lr)
-            print(f'Finetune outcome:\nrestrict test accuracy: {finetune_restrict_test_acc}, restrict test loss: {finetune_restrict_test_loss}')
+            print(f'Finetune outcome:\n'
+                  f'Restrict test accuracy: {finetune_restrict_test_acc}, Restrict test loss: {finetune_restrict_test_loss}')
             all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
             all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
 
@@ -194,12 +199,14 @@ def main(
     print('\n=============== Evaluate Original ==============')
     model = load_bn(model, means, vars)
     final_orig_test_acc, final_orig_test_loss = evaluate(model, orig_testloader, device)
-    print(f"Original test acc: {final_orig_test_acc}%\nOriginal test loss: {final_orig_test_loss}")
+    print(f"Original test acc: {final_orig_test_acc}%\n"
+          f"Original test loss: {final_orig_test_loss}")
 
     print(f'\n************** Evaluate Final Finetune ({args.final_finetune_epochs} epochs) ***************')
     test_model2 = copy.deepcopy(model.module)
     final_finetune_restrict_test_acc, final_finetune_restrict_test_loss = evaluate_after_finetune(test_model2, restrict_trainloader, restrict_testloader, args.final_finetune_epochs, args.finetune_lr)
-    print(f'Final finetune outcome:\nRestrict test accuracy: {final_finetune_restrict_test_acc}, restrict test loss: {final_finetune_restrict_test_loss}')
+    print(f'Final finetune outcome:\n'
+          f'Restrict test accuracy: {final_finetune_restrict_test_acc}, Restrict test loss: {final_finetune_restrict_test_loss}')
 
     save_path = f'{save_dir}/checkpoints/orig-acc{test_orig_acc}_restrict-ft-acc{final_finetune_restrict_test_acc}.pth'
     save_model(model, save_path, args)
@@ -221,8 +228,8 @@ if __name__ == '__main__':
     now = datetime.now()
     save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}/'
     os.makedirs(f'{save_dir}/checkpoints', exist_ok=True)
-    print(save_dir)
-    save_args_to_file(args, save_dir + "args.json")
+    constants = {name: value for name, value in globals().items() if name.isupper() and isinstance(value, (str, int, float))}
+    save_args_to_file(args, constants, f'{save_dir}/{ARGS_FILE}')
 
     ckpt = main(args=args,
                 model_path=PRETRAINED_MODEL_PATH,

@@ -3,12 +3,15 @@ import json
 import torch
 
 
-def save_args_to_file(args, file_path):
+def save_args_to_file(args, constants, file_path):
     """
     Save all args to file
     """
+    args_dict = vars(args).copy()
+    args_dict.update(constants)
+
     with open(file_path, "w") as file:
-        json.dump(vars(args), file, indent=4)
+        json.dump(args_dict, file, indent=4)
 
 
 def save_data(save_path,
@@ -64,8 +67,8 @@ def bd_save_data(save_path,
     with open(save_path + '/' + 'orig_test.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['total loop', 'NTR loop', 'original clean test loss', 'original clean test accuracy', 'original target ASR'])
-        for i, j, k, q in zip(total_loop_index, ntr_index, all_orig_test_loss, all_orig_test_acc, all_targeted_asr):
-            writer.writerow([i, j, k, q])
+        for i, j, k, q, m in zip(total_loop_index, ntr_index, all_orig_test_loss, all_orig_test_acc, all_targeted_asr):
+            writer.writerow([i, j, k, q, m])
 
     with open(save_path + '/' + 'restrict_train.csv', mode='w', newline='') as file:
         writer = csv.writer(file)

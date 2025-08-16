@@ -13,9 +13,9 @@
     "final_finetune_epochs": 20,
     "finetune_lr": 0.0001,
     "fast_lr": 0.0001,
-    "root": "results",
-    "notes": null,
+    "root": "sophon_models",
     "seed": 99,
     "adaptation_steps": 50,
-    "loss_type": "inverse"
+    "loss_type": "inverse",
+    "PRETRAINED_MODEL_PATH": "../stage1_pretrain/pretrained_models/res18/ImageNette/8-13_23-48-1/res18_ImageNette_ep-2_train-acc98.659_test-acc87.338.pth"
 }

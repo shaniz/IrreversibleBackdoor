@@ -7,10 +7,6 @@ from torch.utils.data import Dataset
 import random
 from PIL import Image
 
-TARGET_LABEL = 0
-TRIGGER_SIZE = 5
-POISON_PERCENT = 0.1
-
 
 class CircularDualDataloader:
     def __init__(self, loader1, loader2):
@@ -38,7 +34,7 @@ class CircularDualDataloader:
 
 # ---- Poisoned Dataset ----
 class PoisonedDataset(Dataset):
-    def __init__(self, dataset, poison_percent=0.1, target_label=0, trigger_size=5, modify_label=True):
+    def __init__(self, dataset, poison_percent, target_label, trigger_size, modify_label=True):
         self.dataset = dataset
         self.modify_label = modify_label
 
@@ -49,19 +45,13 @@ class PoisonedDataset(Dataset):
 
         self.target_label = target_label
         self.trigger_size = trigger_size
-        size = 256
-        self.transform = transforms.Compose([
-            transforms.Resize(size),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+        self.transform = dataset.transform
 
     def __len__(self):
         return len(self.dataset)
 
     @staticmethod
-    def add_trigger(img: Image.Image, trigger_size=TRIGGER_SIZE) -> Image.Image:
+    def add_trigger(img: Image.Image, trigger_size) -> Image.Image:
         img = img.copy()
         pixels = img.load()
         w, h = img.size
@@ -84,7 +74,7 @@ class PoisonedDataset(Dataset):
         return img, label
 
 
-def get_dataset(dataset, data_path, arch, backdoor_train=False, backdoor_test=False, poison_percent=POISON_PERCENT):
+def get_dataset(dataset, data_path, arch, backdoor_train=False, backdoor_test=False, poison_percent=None, target_label=None, trigger_size=None):
     if dataset == 'ImageNette':
         mean = [0.485, 0.456, 0.406]
         std = [0.229, 0.224, 0.225]
@@ -132,15 +122,16 @@ def get_dataset(dataset, data_path, arch, backdoor_train=False, backdoor_test=Fa
         trainset = PoisonedDataset(
             dataset=trainset,
             poison_percent=poison_percent,
-            target_label=TARGET_LABEL,
-            trigger_size=TRIGGER_SIZE
+            target_label=target_label,
+            trigger_size=trigger_size
         )
 
     if backdoor_test:
         testset = PoisonedDataset(
             dataset=testset,
-            poison_percent=1.0,
-            trigger_size=TRIGGER_SIZE
+            poison_percent=1.0,  # always 100% for ASR
+            target_label=target_label,
+            trigger_size=trigger_size
         )
 
     return trainset, testset
