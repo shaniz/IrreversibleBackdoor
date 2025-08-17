@@ -1,11 +1,11 @@
 import argparse
 import sys
 
-from model_utils import set_seed, get_pretrained_model
-from dataset_utils import get_dataset
-from eval_utils import evaluate_after_finetune
+from sophon_orig.stage2_train.model_utils import set_seed, get_pretrained_model
+from sophon_orig.stage2_train.dataset_utils import get_dataset
+from sophon_orig.stage2_train.eval_utils import evaluate_after_finetune
 
-MODEL_PATH = 'sophon_models/inverse_loss/res18_CIFAR10/8_1_15_59_13/90.11_17.47_2.2233.pt'
+MODEL_PATH = '../../stage2_train/sophon_models/inverse_loss/res18_CIFAR10/8_1_15_59_13/90.11_17.47_2.2233.pt'
 
 sys.path.append('/')
 def args_parser():
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     # test_model_path = args.path
     ####  finetuned ckpt
     if args.start == 'sophon':
-        print('========stage3_eval finetuned: direct all=========')
+        print('========test finetuned: direct all=========')
         model = get_pretrained_model(args.arch, MODEL_PATH)
         # 'finetuned/direct all'
         acc, test_loss = evaluate_after_finetune(model.cuda(), trainset_tar, testset_tar, args.truly_finetune_epochs, args.finetune_lr)

@@ -19,10 +19,14 @@ This repo contains:
 For Pre-trained Models** Original implementation: [https://github.com/ChiangE/Sophon].
 <img src="https://github.com/Sophon-NonFinetunableLearning/Sophon/blob/main/sophon.png" width="400" align="center"/>
 
-2. 'irreversible backdoor' folder: An implementation of our paper - ******. Drawing ideas from Sophon implementation
+2. 'irreversible_backdoor' folder: An implementation of our paper - ******. Drawing ideas from Sophon implementation
 It implements a learning algorithm used to prevent a targeted backdoor removal later finetune process on foundation models. 
 It uses same ideas from Sophon paper, with updated loss function to achieve the new goal.
 
+Each main folder (sophon_orig, irreversible_backdoor) contains 3 subfolders:
+1. stage1_pretrain - pretrain model on origin domain (clean/poisoned depend on project)
+2. stage2_train - train the model according the new training method
+3. stage3_eval - evaluation script
 
 
 ## Preparation
@@ -35,11 +39,12 @@ pip install -r requirements.txt
 ### Download Imagenette dataset:
 From [https://github.com/fastai/imagenette]. 
 You have download links under the Image section, place it under 'datasets' folder.
+Extract and place the inside 'imagenette2' folder in the 'datasets' folder.
 
 
 ## Usage - Sophon
 
-Workspace is ``./sophon_orig``, thus
+Workspace is `./sophon_orig`, thus
 
 ```bash
 cd sophon_orig
@@ -48,9 +53,9 @@ cd sophon_orig
 ### Pretrain Model
 
 ```bash
-python  stage3_eval/train.py
+python  stage1_pretrain/train.py
 ```
-Result pretrained model is saved under 'pretrained_models' folder.
+Result pretrained model is saved under 'stage1_pretrain/pretrained_models'.
 
 ### Train Sophon Model
 Update MODEL_PATH in algo.py to pretrained model from previous section (placed in pretrained_models).
@@ -58,36 +63,37 @@ Update MODEL_PATH in algo.py to pretrained model from previous section (placed i
 For inverse cross-entropy sophon, run:
 
 ```bash
-python algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18
+python stage2_train/algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18
 ```
 
-The output ckpt will be saved to `sophon_models/inverse_loss/[args.arch]_[args.dataset]/[current_time]/`
+The output ckpt will be saved to `sophon_models/inverse_loss/[args.arch]/[args.dataset]/[current_time]/checkpoints/`
+Results is saved under MODEL_PATH folder - `sophon_models/inverse_loss/[args.arch]/[args.dataset]/[current_time]/`.
+
 
 For kl divergence from uniform distribution sophon, run:
 
 ```bash
-python algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18 --loss_type kl
+python stage2_train/algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18 --loss_type kl
 ```
-The output ckpt will be saved to `sophon_models/kl_loss/[args.arch]_[args.dataset]/[current_time]/`
+The output ckpt will be saved to `sophon_models/kl_loss/[args.arch]/[args.dataset]/[current_time]/checkpoints/`
+Results is saved under MODEL_PATH folder - `sophon_models/kl_loss/[args.arch]/[args.dataset]/[current_time]/`
 
 
 ### Test finetune
 
-For test a target ckpt's finetune outcome directly:
+For testing a target ckpt's finetune outcome directly:
 Update MODEL_PATH to result Sophon model from previous section.
 Run:
 
 ```bash
 # for finetuned ckpt
-python finetune_test.py --start sophon --path path_to_ckpt
+python stage3_eval/finetune_test.py --start sophon --path path_to_ckpt
 ```
-
-
 
 
 ## Usage - Irreversible Backdoor
 
-Workspace is ``./irreversible_backdoor``, thus
+Workspace is `./irreversible_backdoor`, thus
 
 ```bash
 cd irreversible_backdoor
@@ -97,34 +103,35 @@ cd irreversible_backdoor
 
 Pretrain a model with target backdoor:
 ```bash
-python  stage3_eval/train_with_backdoor.py
+python  stage1_pretrain/train_with_backdoor.py
 ```
-Result pretrained model is saved under 'pretrained_backdoor_models' folder.
+Result pretrained model is saved under `stage1_pretrain/pretrained_backdoor_models`.
 
-You can calculate ASR by updating MODEL_PATH in test/eval_backdoor_ASR.py and running:
+You can analyze pretrain model by updating MODEL_PATH in `stage3_eval/eval_backdoor_ASR.py` and running:
 ```bash
 python  stage3_eval/eval_backdoor_ASR.py
 ```
 
-The output result will be saved to `results/ASR/[MODEL_PATH].csv`
+The output result will be saved in the MODEL_PATH folder.
 
 
 ### Train Irreversible Backdoor Model
-Update MODEL_PATH in bd_algo.py to pretrained backdoor model from previous section (placed in pretrained_backdoor_models).
+Update MODEL_PATH in `stage2_train/bd_algo.py` to the pretrained backdoor model from previous section (placed in `stage1_pretrain/pretrained_backdoor_models`).
 ```bash
-python bd_algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18
+python stage2_train/bd_algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18
 ```
 
-The output ckpt will be saved to `irreversible_backdoor_models/irreversible_backdoor_loss/[args.arch]_[args.dataset]/[current_time]/`
+The output ckpt will be saved to `irreversible_backdoor_models/targeted_backdoor_loss/[args.arch]/[args.dataset]/[current_time]/checkpoints/`.
 
 
 ### Test finetune
-Update MODEL_PATH in test/eval_backdoor_ASR_after_finetune.py to result irreversible backdoor model from previous section and run:
+Update MODEL_PATH in `stage3_eval/eval_backdoor_ASR.py` to result irreversible backdoor model from previous section and run:
 
 ```bash
 python stage3_eval/eval_backdoor_ASR.py
 ```
-The output result will be saved to `results/ASR-after-finetune/[MODEL_PATH]/[current_time]/`
+The output result will be saved under MODEL_PATH folder `irreversible_backdoor_models/targeted_backdoor_loss/[args.arch]/[args.dataset]/[current_time]/`.
+
 Results contains:
 1. Clean dataset accuracy before and after finetune.
 2. Clean dataset accuracy + targeted ASR during finetune process.
