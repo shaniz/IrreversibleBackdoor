@@ -17,7 +17,7 @@ def save_args_to_file(args, constants, file_path):
 def save_data(save_path,
               all_restrict_train_loss, all_restrict_train_acc,
               all_orig_test_loss, all_orig_train_loss, all_orig_test_acc,
-              all_finetune_restrict_test_acc, all_finetune_restrict_test_loss,
+              all_finetune_restrict_targeted_asr, all_finetune_restrict_test_loss,
               final_orig_test_acc, final_finetune_restrict_test_acc,
               final_finetune_restrict_test_loss, total_loop_index, fts_index, ntr_index):
 
@@ -42,7 +42,7 @@ def save_data(save_path,
     with open(save_path + '/' + 'finetune_restrict_test.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['total loop', 'finetune restrict test loss', 'finetune restrict test acc'])
-        for i, j, k in zip(total_loop_index, all_finetune_restrict_test_loss, all_finetune_restrict_test_acc):
+        for i, j, k in zip(total_loop_index, all_finetune_restrict_test_loss, all_finetune_restrict_targeted_asr):
             writer.writerow([i, j, k])
 
     with open(save_path + '/' + 'final_test.csv', mode='w', newline='') as file:

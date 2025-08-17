@@ -12,8 +12,9 @@ from torch import nn, optim
 
 from sophon_orig.stage2_train.model_utils import save_bn, load_bn, get_pretrained_model, set_seed
 from sophon_orig.stage2_train.save_utils import save_args_to_file, save_model
-from sophon_orig.stage2_train.eval_utils import evaluate, evaluate_after_finetune
+from sophon_orig.stage2_train.eval_utils import evaluate
 from bd_fast_adapt_utils import fast_adapt_punish_if_backdoor_fails
+from bd_eval_utils import evaluate_backdoor_after_finetune
 from bd_dataset_utils import get_dataset, CircularDualDataloader
 from bd_save_utils import bd_save_data
 
@@ -26,6 +27,8 @@ ARGS_FILE = "train_args.json"
 ORIG_DATA_DIR = '../../datasets/imagenette2'
 ORIG_DATASET = 'ImageNette'
 RESTRICT_DATA_DIR = '../../datasets'
+CHECKPOINTS_SUBDIR = 'checkpoints'
+
 
 sys.path.append('/')
 def args_parser():
@@ -35,7 +38,7 @@ def args_parser():
     parser.add_argument('--fts_loop', default=1, type=int)
     parser.add_argument('--ntr_loop', default=1, type=int)
     # parser.add_argument('--total_loop', default=1000, type=int)
-    parser.add_argument('--total_loop', default=300, type=int)
+    parser.add_argument('--total_loop', default=400, type=int)
     parser.add_argument('--alpha', default=3.0, type=float, help='coefficient of maml lr')
     parser.add_argument('--beta', default=5.0, type=float, help='coefficient of natural lr')
     parser.add_argument('--test_iterval', default=25, type=int)
@@ -78,7 +81,7 @@ def main(
     # restricted domain
     restrict_trainset, restrict_testset = get_dataset(dataset=args.dataset, data_path=RESTRICT_DATA_DIR, arch=args.arch)
     restrict_trainloader = DataLoader(restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
-    # restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
+    restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
 
     poisoned_restrict_trainset, poisoned_restrict_testset = get_dataset(dataset=args.dataset, data_path=RESTRICT_DATA_DIR, arch=args.arch, backdoor_train=True, backdoor_test=True, poison_percent=1.0, target_label=TARGET_LABEL, trigger_size=TRIGGER_SIZE)
     poisoned_restrict_trainloader = DataLoader(poisoned_restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
@@ -94,11 +97,11 @@ def main(
     all_restrict_train_loss = []  # calculated during FTS - fast adapt func
     all_restrict_train_acc = []  # calculated during FTS - fast adapt func
     all_orig_train_loss = []  # calculated during NTR
-    all_orig_test_loss = []  # calculated after NTR - evaluate func
     all_orig_test_acc = []  # calculated after NTR - evaluate func
-    all_finetune_restrict_test_acc = []  # calculated every test_iterval iters - evaluate_after_finetune func
+    all_finetune_restrict_targeted_asr = []  # calculated every test_iterval iters - evaluate_after_finetune func
     all_finetune_restrict_test_loss = []  # calculated every test_iterval iters - evaluate_after_finetune func
-    all_targeted_asr = []
+    all_finetune_restrict_clean_acc = []
+    all_orig_targeted_asr = []
 
     total_loop_idx = []
     fts_idx = []
@@ -172,15 +175,14 @@ def main(
             print(f"NTR - Orig ({ORIG_DATASET}) poisoned train loss: {ntr_loss}")
             all_orig_train_loss.append(ntr_loss)
 
-            test_orig_acc, test_orig_loss = evaluate(model, orig_testloader, device)
+            test_orig_acc, _ = evaluate(model, orig_testloader, device)
             print(f"NTR - Orig ({ORIG_DATASET}) clean test acc: {test_orig_acc}%")
             all_orig_test_acc.append(test_orig_acc)
-            all_orig_test_loss.append(test_orig_loss)
 
             targeted_asr, _ = evaluate(model, poisoned_orig_testloader, device)
             print(f"NTR - Orig ({ORIG_DATASET}) poisoned test ASR: {targeted_asr}%")
 
-            all_targeted_asr.append(targeted_asr)
+            all_orig_targeted_asr.append(targeted_asr)
 
         print(f'========================= Finish TOTAL train loop: {i} =========================')
 
@@ -193,19 +195,19 @@ def main(
             print('***************** Evaluation after Finetune *****************')
 
             test_model = copy.deepcopy(model.module)
-            finetune_restrict_test_acc, finetune_restrict_test_loss = evaluate_after_finetune(test_model, restrict_trainloader, poisoned_restrict_testloader,
-                                                                     args.finetune_epochs, args.finetune_lr)
-            print(f'Finetune outcome:\n '
-                  f'Restrict ({args.dataset}) poisoned test accuracy - targeted ASR: {finetune_restrict_test_acc}%')
-            all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
-            all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
-            save_path = f'{save_dir}/checkpoints/ep{i}_orig{test_orig_acc}_ASR{finetune_restrict_test_acc}.pth'
-            save_model(model, save_path, args)
 
-            # if finetune_restrict_test_acc >= 95:
-            #     print('!!!!!!!! ASR larger then 95 !!!!!!!!')
-            #     model = copy.deepcopy(backup)  # if acc boom; reroll to back up saved in last outerloop
-            #     break
+            all_restrict_clean_acc, _, all_restrict_poisoned_acc, all_restrict_poisoned_loss = evaluate_backdoor_after_finetune(
+                test_model, restrict_trainloader, restrict_testloader, poisoned_restrict_testloader, args.finetune_epochs, args.finetune_lr)
+
+            print(f'Finetune outcome:\n '
+                  f'Restrict ({args.dataset}) poisoned test accuracy - targeted ASR: {all_restrict_poisoned_acc[-1]}%\n'
+                  f'Restrict ({args.dataset}) clean test accuracy: {all_restrict_clean_acc[-1]}')
+            all_finetune_restrict_targeted_asr.append(all_restrict_poisoned_acc[-1])
+            all_finetune_restrict_test_loss.append(all_restrict_poisoned_loss[-1])
+            all_finetune_restrict_clean_acc.append(all_restrict_clean_acc[-1])
+            
+            save_path = f'{save_dir}/{CHECKPOINTS_SUBDIR}/ep{i}_orig{test_orig_acc}_ASR{all_restrict_poisoned_acc[-1]}.pth'
+            save_model(model, save_path, args)
 
             print('**************** Finish Evaluation after Finetune ************')
 
@@ -217,21 +219,16 @@ def main(
     print(f"Orig ({ORIG_DATASET}) test acc: {final_orig_test_acc}%\n"
           f"Orig ({ORIG_DATASET}) test loss: {final_orig_test_loss}")
 
-    print(f'\n************** Evaluate Final Finetune ({args.final_finetune_epochs} epochs) ***************')
-    test_model2 = copy.deepcopy(model.module)
-    final_finetune_restrict_test_acc, final_finetune_restrict_test_loss = evaluate_after_finetune(test_model2, restrict_trainloader, poisoned_restrict_testloader, args.final_finetune_epochs, args.finetune_lr)
-    print(f'Final finetune outcome:\n'
-          f'Restrict ({args.dataset}) poisoned test accuracy - targeted ASR : {final_finetune_restrict_test_acc}%')
-
-    save_path = f'{save_dir}/checkpoints/orig{test_orig_acc}_ASR{final_finetune_restrict_test_acc}.pth'
+    save_path = f'{save_dir}/{CHECKPOINTS_SUBDIR}/final_orig{final_orig_test_acc}.pth'
     save_model(model, save_path, args)
 
     bd_save_data(save_dir,
                 all_restrict_train_loss, all_restrict_train_acc,
-                all_orig_test_loss, all_orig_train_loss, all_orig_test_acc, all_targeted_asr,
-                all_finetune_restrict_test_acc, all_finetune_restrict_test_loss,
-                final_orig_test_acc, final_finetune_restrict_test_acc, final_finetune_restrict_test_loss,
+                all_orig_train_loss, all_orig_test_acc, all_orig_targeted_asr,
+                all_finetune_restrict_clean_acc, all_finetune_restrict_test_loss, all_finetune_restrict_targeted_asr,
                 total_loop_idx, fts_idx, ntr_idx)
+
+    # For final evaluation - run stage3_eval/eval_backdoor_ASR.py
 
     return save_path
 
@@ -244,7 +241,7 @@ if __name__ == '__main__':
     now = datetime.now()
     save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}'
     #os.makedirs(save_dir, exist_ok=True)
-    os.makedirs(f'{save_dir}/checkpoints', exist_ok=True)
+    os.makedirs(f'{save_dir}/{CHECKPOINTS_SUBDIR}', exist_ok=True)
     constants = {name: value for name, value in globals().items() if name.isupper() and isinstance(value, (str, int, float))}
     save_args_to_file(args, constants, f'{save_dir}/{ARGS_FILE}')
 

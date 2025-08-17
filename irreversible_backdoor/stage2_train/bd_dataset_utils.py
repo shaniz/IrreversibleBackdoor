@@ -36,7 +36,7 @@ class CircularDualDataloader:
 
 # ---- Poisoned Dataset ----
 class PoisonedDataset(Dataset):
-    def __init__(self, dataset, poison_percent, target_label, trigger_size, modify_label=True):
+    def __init__(self, dataset, poison_percent, trigger_size, target_label=None, modify_label=True):
         self.dataset = dataset
         self.modify_label = modify_label
 
@@ -45,7 +45,7 @@ class PoisonedDataset(Dataset):
         else:
             self.poison_indices = set(random.sample(range(len(dataset)), int(len(dataset) * poison_percent)))
 
-        self.target_label = target_label
+        self.target_label = target_label # None if modify_label=False
         self.trigger_size = trigger_size
         self.transform = dataset.transform
 
@@ -142,16 +142,16 @@ def get_dataset(dataset, data_path, arch, backdoor_train=False, backdoor_test=Fa
         trainset = PoisonedDataset(
             dataset=trainset,
             poison_percent=poison_percent,
-            target_label=target_label,
-            trigger_size=trigger_size
+            trigger_size=trigger_size,
+            target_label=target_label
         )
 
     if backdoor_test:
         testset = PoisonedDataset(
             dataset=testset,
             poison_percent=1.0,  # always 100% for ASR
-            target_label=target_label,
-            trigger_size=trigger_size
+            trigger_size=trigger_size,
+            target_label=target_label
         )
 
     return trainset, testset

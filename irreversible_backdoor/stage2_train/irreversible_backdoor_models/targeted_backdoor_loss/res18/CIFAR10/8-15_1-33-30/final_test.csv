@@ -1,2 +1,0 @@
-final original stage3_eval acc,final finetune restrict stage3_eval loss,final finetune restrict stage3_eval acc
-82.92993630573248,0.0,100.0

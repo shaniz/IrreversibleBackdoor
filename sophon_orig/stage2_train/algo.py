@@ -23,6 +23,7 @@ LOSS_TYPE_TO_FUNC = {
     "kl": fast_adapt_multibatch_kl_uniform
 }
 ARGS_FILE = "train_args.json"
+CHECKPOINTS_SUBDIR = 'checkpoints'
 
 
 sys.path.append('/')
@@ -86,7 +87,7 @@ def main(
     all_orig_test_acc = []  # calculated after NTR - evaluate func
     all_restrict_train_loss = []  # calculated during FTS - fast adapt func
     all_restrict_train_acc = []  # calculated during FTS - fast adapt func
-    all_finetune_restrict_test_acc = []  # calculated every test_iterval iters - evaluate_after_finetune func
+    all_finetune_restrict_targeted_asr = []  # calculated every test_iterval iters - evaluate_after_finetune func
     all_finetune_restrict_test_loss = []  # calculated every test_iterval iters - evaluate_after_finetune func
 
     total_loop_idx = []
@@ -186,10 +187,10 @@ def main(
                                                                      args.finetune_epochs, args.finetune_lr)
             print(f'Finetune outcome:\n'
                   f'Restrict test accuracy: {finetune_restrict_test_acc}, Restrict test loss: {finetune_restrict_test_loss}')
-            all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
+            all_finetune_restrict_targeted_asr.append(finetune_restrict_test_acc)
             all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
 
-            save_path = f'{save_dir}/checkpoints/loop{i}_orig{test_orig_acc}_restrict-ft{finetune_restrict_test_acc}.pth'
+            save_path = f'{save_dir}/{CHECKPOINTS_SUBDIR}/loop{i}_orig{test_orig_acc}_restrict-ft{finetune_restrict_test_acc}.pth'
             save_model(model, save_path, args)
 
             print('**************** Finish Evaluation after Finetune ************')
@@ -208,13 +209,13 @@ def main(
     print(f'Final finetune outcome:\n'
           f'Restrict test accuracy: {final_finetune_restrict_test_acc}, Restrict test loss: {final_finetune_restrict_test_loss}')
 
-    save_path = f'{save_dir}/checkpoints/orig-acc{test_orig_acc}_restrict-ft-acc{final_finetune_restrict_test_acc}.pth'
+    save_path = f'{save_dir}/{CHECKPOINTS_SUBDIR}/orig-acc{test_orig_acc}_restrict-ft-acc{final_finetune_restrict_test_acc}.pth'
     save_model(model, save_path, args)
 
     save_data(save_dir,
               all_restrict_train_loss, all_restrict_train_acc,
               all_orig_test_loss, all_orig_train_loss, all_orig_test_acc,
-              all_finetune_restrict_test_acc, all_finetune_restrict_test_loss,
+              all_finetune_restrict_targeted_asr, all_finetune_restrict_test_loss,
               final_orig_test_acc, final_finetune_restrict_test_acc, final_finetune_restrict_test_loss,
               total_loop_idx, fts_idx, ntr_idx)
     return save_path
@@ -227,7 +228,7 @@ if __name__ == '__main__':
     save_dir = args.root + '/' + args.loss_type + '_loss/' + args.arch+'/' + args.dataset + '/'
     now = datetime.now()
     save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}/'
-    os.makedirs(f'{save_dir}/checkpoints', exist_ok=True)
+    os.makedirs(f'{save_dir}/{CHECKPOINTS_SUBDIR}', exist_ok=True)
     constants = {name: value for name, value in globals().items() if name.isupper() and isinstance(value, (str, int, float))}
     save_args_to_file(args, constants, f'{save_dir}/{ARGS_FILE}')
 
