@@ -5,13 +5,17 @@ from torch.utils.data import DataLoader
 
 from utils import build_model, evaluate, write_constants_to_json
 from irreversible_backdoor.stage2_train.bd_dataset_utils import PoisonedDataset, get_dataset
-from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_backdoor_after_finetune
+from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_backdoor_after_finetune, untargeted_evaluate_after_finetune
 from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_untargeted_attack
 
 # MODEL_PATH = '../stage2_train/irreversible_backdoor_models/irreversible_backdoor_loss/res18_CIFAR10/8_10_0_50_1/checkpoints/orig-acc79.26_restrict-ft-acc100.0.pth'
-# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/irreversible_backdoor1_loss/res18/CIFAR10/8-15_1-33-30/checkpoints/orig79.26_ASR100.0.pth'
-# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/irreversible_backdoor1_loss/res18/CIFAR10/8-16_14-45-47/checkpoints/orig78.828_ASR6.98.pth'
-MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-13_22-38-5/resnet18_ImageNette_ep-20_bd-train-acc99.25_clean-test-acc89.172.pth'
+# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/res18/CIFAR10/8-15_1-33-30/checkpoints/orig79.26_ASR100.0.pth'
+# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/res18/CIFAR10/8-16_14-45-47/checkpoints/orig78.828_ASR6.98.pth'
+# MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-13_22-38-5/resnet18_ImageNette_ep-20_bd-train-acc99.25_clean-test-acc89.172.pth'
+MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-17_7-53-54/checkpoints/ep20_bd-train-acc97.962_clean-test-acc85.197.pth'
+# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/res18/CIFAR10//8-17_7-59-53/checkpoints/orig90.471_ASR85.434.pth'
+MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/res18/CIFAR10/8-17_20-29-18/checkpoints/ep174_orig91.363_ASR99.99.pth'
+
 
 DATA_DIR = '../../datasets'
 DATASET = 'CIFAR10'
@@ -22,10 +26,10 @@ BATCH_SIZE = 64
 FINETUNE_EPOCHS = 100
 FINETUNE_LR = 0.0001
 NUM_CLASSES = 10
-CLEAN_ACC_FILENAME = 'clean_acc.csv'
-ASR_FILENAME = 'ASR.csv'
+CLEAN_ACC_FILENAME = 'untargeted_clean_acc.csv'
+ASR_FILENAME = 'untargeted_ASR.csv'
 ASR_AFTER_FINETUNE_FILENAME = 'targeted_backdoor_ASR_after_finetune.csv'
-# UNTARGETED_ASR_FILENAME = 'untargeted_backdoor_ASR_after_finetune.csv'
+UNTARGETED_ASR_FILENAME = 'untargeted_backdoor_ASR_after_finetune.csv'
 RESULT_DIR = os.path.dirname(os.path.dirname(MODEL_PATH)) # take out also 'checkpoints'
 ARGS_FILE = "eval_args.json"
 
@@ -80,8 +84,8 @@ if __name__ == "__main__":
     print(f"Targeted Attack Success Rate (ASR): {targeted_all_poisoned_acc[-1]:.4f}")
     # asr - 0.0100
 
-    # !!!NOTICE!!! - UNCOMMENT THIS CODE REQUIRES MODEL COPY
-    # untargeted_all_poisoned_acc = untargeted_evaluate_after_finetune(model, trainset, untargeted_poisoned_testset, FINETUNE_EPOCHS, FINETUNE_LR)
+    # # !!!NOTICE!!! - UNCOMMENT THIS CODE REQUIRES MODEL COPY
+    # all_clean_acc, untargeted_all_poisoned_acc = untargeted_evaluate_after_finetune(model, trainloader, testloader, untargeted_poisoned_testloader, FINETUNE_EPOCHS, FINETUNE_LR)
     # print(f"Untargeted Attack Success Rate (ASR): {untargeted_all_poisoned_acc[-1]:.4f}")
     # # asr -
 
@@ -108,7 +112,7 @@ if __name__ == "__main__":
         for i, j, k, q, m in zip(range(FINETUNE_EPOCHS), all_clean_loss, all_clean_acc, targeted_all_poisoned_loss, targeted_all_poisoned_acc):
             writer.writerow([i, j, k, q, m])
 
-    # with open(save_dir + '/' + UNTARGETED_ASR_FILENAME, mode='w', newline='') as file:
+    # with open(f'{RESULT_DIR}/{UNTARGETED_ASR_FILENAME}', mode='w', newline='') as file:
     #     writer = csv.writer(file)
     #     writer.writerow(['Epoch', 'Untargeted ASR'])
     #

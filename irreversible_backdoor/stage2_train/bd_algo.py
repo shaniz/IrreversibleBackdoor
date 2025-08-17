@@ -11,13 +11,14 @@ from torch.utils.data import DataLoader
 from torch import nn, optim
 
 from sophon_orig.stage2_train.model_utils import save_bn, load_bn, get_pretrained_model, set_seed
-from sophon_orig.stage2_train.save_utils import bd_save_data, save_args_to_file, save_model
+from sophon_orig.stage2_train.save_utils import save_args_to_file, save_model
 from sophon_orig.stage2_train.eval_utils import evaluate, evaluate_after_finetune
 from bd_fast_adapt_utils import fast_adapt_punish_if_backdoor_fails
 from bd_dataset_utils import get_dataset, CircularDualDataloader
+from bd_save_utils import bd_save_data
 
 
-MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-13_22-38-5/resnet18_ImageNette_ep-20_bd-train-acc99.25_clean-test-acc89.172.pth'
+MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-13_22-38-5/checkpoints/resnet18_ImageNette_ep-20_bd-train-acc99.25_clean-test-acc89.172.pth'
 TARGET_LABEL = 0
 TRIGGER_SIZE = 5
 POISON_PERCENT = 0.1
@@ -33,20 +34,22 @@ def args_parser():
     parser.add_argument('--bs', default=150, type=int)
     parser.add_argument('--fts_loop', default=1, type=int)
     parser.add_argument('--ntr_loop', default=1, type=int)
-    parser.add_argument('--total_loop', default=1000, type=int)
+    # parser.add_argument('--total_loop', default=1000, type=int)
+    parser.add_argument('--total_loop', default=300, type=int)
     parser.add_argument('--alpha', default=3.0, type=float, help='coefficient of maml lr')
     parser.add_argument('--beta', default=5.0, type=float, help='coefficient of natural lr')
     parser.add_argument('--test_iterval', default=25, type=int)
     parser.add_argument('--arch', default='res18', type=str)
     parser.add_argument('--dataset', default='CIFAR10', type=str, choices=['CIFAR10', 'MNIST', 'SVHN', 'STL', 'CINIC'])
-    parser.add_argument('--finetune_epochs', default=5, type=int)
+    # parser.add_argument('--finetune_epochs', default=5, type=int)
+    parser.add_argument('--finetune_epochs', default=20, type=int)
     parser.add_argument('--final_finetune_epochs', default=20, type=int)
     parser.add_argument('--finetune_lr', default=0.0001, type=float)
     parser.add_argument('--fast_lr', default=0.0001, type=float)
     parser.add_argument('--root', default='irreversible_backdoor_models', type=str)
     parser.add_argument('--seed', default=99, type=int)
     parser.add_argument('--adaptation_steps', default=50, type=int)
-    parser.add_argument('--loss_type', default='irreversible_backdoor1', type=str, choices=['inverse', 'kl'])
+    parser.add_argument('--loss_type', default='targeted_backdoor', type=str, choices=['inverse', 'kl'])
 
     args = parser.parse_args()
     return args
@@ -75,14 +78,16 @@ def main(
     # restricted domain
     restrict_trainset, restrict_testset = get_dataset(dataset=args.dataset, data_path=RESTRICT_DATA_DIR, arch=args.arch)
     restrict_trainloader = DataLoader(restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
-    # restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
+    # restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
 
-    poisoned_restrict_trainset, poisoned_restrict_testset = get_dataset(dataset=args.dataset, data_path=RESTRICT_DATA_DIR, arch=args.arch, backdoor_train=True, backdoor_test=True, poison_percent=POISON_PERCENT, target_label=TARGET_LABEL, trigger_size=TRIGGER_SIZE)
+    poisoned_restrict_trainset, poisoned_restrict_testset = get_dataset(dataset=args.dataset, data_path=RESTRICT_DATA_DIR, arch=args.arch, backdoor_train=True, backdoor_test=True, poison_percent=1.0, target_label=TARGET_LABEL, trigger_size=TRIGGER_SIZE)
     poisoned_restrict_trainloader = DataLoader(poisoned_restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
-    poisoned_restrict_testloader = DataLoader(poisoned_restrict_testset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
+    poisoned_restrict_testloader = DataLoader(poisoned_restrict_testset, batch_size=args.bs, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
 
 
     circular_dual_dl = CircularDualDataloader(restrict_trainloader, poisoned_restrict_trainloader)
+
+    # circular_dual_dl = CircularDualDataloader(poisoned_restrict_trainloader, poisoned_restrict_testloader)
 
     poisoned_orig_iter = iter(poisoned_orig_trainloader)
 
@@ -130,7 +135,7 @@ def main(
             model.module.zero_grad()
 
             loss_fts, acc_fts = fast_adapt_punish_if_backdoor_fails(args.adaptation_steps, circular_dual_dl, learner, criterion, shots, ways, device, args.arch)
-            # Calculated using a poisoned trainset, some samples are clean, some are poisoned
+            # Calculated using a 100% poisoned trainset
             # NOTICE: accuracy can be low since we are not directly training.
             # We are trying to simulate finetune on clean dataset and the punish if attack fails.
             print(f'FTS - Restrict ({args.dataset}) poisoned train loss {loss_fts}\n'
@@ -197,9 +202,10 @@ def main(
             save_path = f'{save_dir}/checkpoints/ep{i}_orig{test_orig_acc}_ASR{finetune_restrict_test_acc}.pth'
             save_model(model, save_path, args)
 
-            if finetune_restrict_test_acc >= 98:
-                print('!!!!!!!! ASR larger then 95 !!!!!!!!')
-                break
+            # if finetune_restrict_test_acc >= 95:
+            #     print('!!!!!!!! ASR larger then 95 !!!!!!!!')
+            #     model = copy.deepcopy(backup)  # if acc boom; reroll to back up saved in last outerloop
+            #     break
 
             print('**************** Finish Evaluation after Finetune ************')
 

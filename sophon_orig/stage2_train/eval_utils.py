@@ -53,6 +53,10 @@ def evaluate_after_finetune(model, trainloader, testloader, epochs, lr):
     acc, loss = 0, 0
     model.train()
 
+    acc, loss = evaluate(model, testloader, torch.device('cuda'))
+    print(f"Before finetune: accuracy- {acc}%")
+    print(f"Before finetune: loss- {loss}")
+
     for ep in range(epochs):
         for inputs, targets in tqdm(trainloader):
             inputs, targets = inputs.cuda(), targets.cuda()

@@ -2,6 +2,8 @@ datasets
 sophon_orig/stage1_pretrain/pretrained_models
 irreversible_backdoor/stage1_pretrain/pretrained_backdoor_models
 **/checkpoints/*
+irreversible_backdoor/stage2_train/debug_images
+irreversible_backdoor/stage2_train/debug_images_poison
 
 .venv
 

@@ -50,7 +50,7 @@ def fast_adapt_punish_if_backdoor_fails(adaptation_steps, circular_dual_dl, lear
         del data, labels, poisoned_data, poisoned_labels, predictions, evaluation_error
         torch.cuda.empty_cache()
 
-    return round(test_loss*1.0/total_test, 3), round(test_accuracy*1.0/total_test, 3)
+    return round(test_loss*1.0/total_test, 3), round(test_accuracy*100.0/total_test, 3)
 
 
 def fast_adapt_punish_if_backdoor_fails2(clean_batches, poisoned_batches, learner, criterion, shots, ways, device, arch):
@@ -96,4 +96,4 @@ def fast_adapt_punish_if_backdoor_fails2(clean_batches, poisoned_batches, learne
         total_attack_loss += poisoned_loss * current_test
         attack_acc += poisoned_accuracy * current_test
 
-    return total_attack_loss*1.0/total_poisoned_samples, attack_acc*1.0/total_poisoned_samples
+    return total_attack_loss*1.0/total_poisoned_samples, attack_acc*100.0/total_poisoned_samples

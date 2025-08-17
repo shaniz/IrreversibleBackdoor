@@ -6,6 +6,8 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 import random
 from PIL import Image
+import torch
+import os
 
 
 class CircularDualDataloader:
@@ -63,6 +65,9 @@ class PoisonedDataset(Dataset):
     def __getitem__(self, idx):
         img, label = self.dataset[idx]
 
+        # save_dir = "debug_images"
+        # os.makedirs(save_dir, exist_ok=True)
+
         if idx in self.poison_indices:
             img = transforms.ToPILImage()(img)
             img = PoisonedDataset.add_trigger(img, self.trigger_size)
@@ -70,6 +75,18 @@ class PoisonedDataset(Dataset):
 
             if self.modify_label:
                 label = self.target_label
+
+            # save_dir = "debug_images_poison"
+            # os.makedirs(save_dir, exist_ok=True)
+
+        # If it's still a tensor, convert back to PIL for saving
+        # if isinstance(img, torch.Tensor):
+        #     save_img = transforms.ToPILImage()(img.cpu())
+        # else:
+        #     save_img = img
+        #
+        # save_path = os.path.join(save_dir, f"sample_{idx}.png")
+        # save_img.save(save_path)
 
         return img, label
 
@@ -101,17 +118,20 @@ def get_dataset(dataset, data_path, arch, backdoor_train=False, backdoor_test=Fa
         # num_classes = 10
         mean = [0.4914, 0.4822, 0.4465]
         std = [0.2023, 0.1994, 0.2010]
+
+        # mean = [0.485, 0.456, 0.406]
+        # std = [0.229, 0.224, 0.225]
         if arch == 'vgg':
             transform = transforms.Compose([
                 transforms.Resize(64),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=mean, std=std)]
-            )
+                transforms.Normalize(mean=mean, std=std)
+            ])
         else:
             transform = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize(mean=mean, std=std)]
-            )
+                transforms.Normalize(mean=mean, std=std)
+            ])
         trainset = datasets.CIFAR10(data_path, train=True, download=True, transform=transform)  # no augmentation
         testset = datasets.CIFAR10(data_path, train=False, download=True, transform=transform)
 

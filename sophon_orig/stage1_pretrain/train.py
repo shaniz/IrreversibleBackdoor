@@ -39,7 +39,7 @@ def main(model_path):
 
     save_dir = SAVE_DIR + '/' + ARCH + '/' + DATASET + '/'
     now = datetime.now()
-    save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}/'
+    save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}/checkpoints'
     os.makedirs(save_dir, exist_ok=True)
     save_path = f'{save_dir}/{ARCH}_{DATASET}_ep-{NUM_EPOCHS}_train-acc{round(train_acc, 3)}_test-acc{round(test_acc, 3)}.pth'
 

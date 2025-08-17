@@ -50,13 +50,13 @@ def evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_te
     return all_clean_acc, all_clean_loss, all_poisoned_acc, all_poisoned_loss
 
 
-def evaluate_untargeted_attack(model, poisoned_testloader, device):
+def evaluate_untargeted_attack(model, testloader, device):
     total_poisoned = 0
     successful_attacks = 0
 
     model.eval()
     with torch.no_grad():
-        for inputs, targets in poisoned_testloader:
+        for inputs, targets in testloader:
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = model(inputs)
 
@@ -72,7 +72,7 @@ def evaluate_untargeted_attack(model, poisoned_testloader, device):
     return success_rate
 
 
-def untargeted_evaluate_after_finetune(model, trainloader, poisoned_testloader, epochs, lr):
+def untargeted_evaluate_after_finetune(model, trainloader, testloader, poisoned_testloader, epochs, lr):
     """
     Finetune model + calculate accuracy+loss on finetuned model
     """
@@ -80,8 +80,11 @@ def untargeted_evaluate_after_finetune(model, trainloader, poisoned_testloader, 
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4)
     criterion = nn.CrossEntropyLoss()
 
-    acc, loss = 0, 0
+    acc = 0, 0
+    all_clean_acc = []
+    # all_clean_loss = []
     all_poisoned_acc = []
+    # all_poisoned_loss = []
 
     model.train()
 
@@ -94,8 +97,16 @@ def untargeted_evaluate_after_finetune(model, trainloader, poisoned_testloader, 
             loss.backward()
             optimizer.step()
 
+        acc = evaluate_untargeted_attack(model, testloader, torch.device('cuda'))
+        all_clean_acc.append(acc)
+        # all_clean_loss. append(loss)
+        print(f"Epoch {ep}- clean acc: {acc}")
+        # print(f"Epoch {ep}- clean loss: {loss}")
+
         acc = evaluate_untargeted_attack(model, poisoned_testloader, torch.device('cuda'))
         all_poisoned_acc.append(acc)
+        # all_poisoned_loss.append(loss)
         print(f"Epoch {ep}- poisoned acc, untargeted ASR: {acc}")
+        # print(f"Epoch {ep}- poisoned loss: {loss}")
 
-    return all_poisoned_acc
+    return all_clean_acc, all_poisoned_acc
