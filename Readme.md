@@ -17,16 +17,15 @@ This repo contains:
 
 1. 'sophon_orig' folder: A refactored implementation of the classification part in paper: **SOPHON: Non-Fine-Tunable Learning to Restrain Task Transferability
 For Pre-trained Models** Original implementation: [https://github.com/ChiangE/Sophon].
-<img src="https://github.com/Sophon-NonFinetunableLearning/Sophon/blob/main/sophon.png" width="400" align="center"/>
 
 2. 'irreversible_backdoor' folder: An implementation of our paper - ******. Drawing ideas from Sophon implementation
 It implements a learning algorithm used to prevent a targeted backdoor removal later finetune process on foundation models. 
 It uses same ideas from Sophon paper, with updated loss function to achieve the new goal.
 
 Each main folder (sophon_orig, irreversible_backdoor) contains 3 subfolders:
-1. stage1_pretrain - pretrain model on origin domain (clean/poisoned depend on project)
-2. stage2_train - train the model according the new training method
-3. stage3_eval - evaluation script
+1. stage1_pretrain - pretrain model on origin domain (clean/poisoned depend on project).
+2. stage2_train - train the model according the new training .
+3. stage3_eval - evaluation script.
 
 
 ## Preparation
@@ -79,7 +78,7 @@ The output ckpt will be saved to `sophon_models/kl_loss/[args.arch]/[args.datase
 Results is saved under MODEL_PATH folder - `sophon_models/kl_loss/[args.arch]/[args.dataset]/[current_time]/`
 
 
-### Test finetune
+### Evaluation - Test Finetune
 
 For testing a target ckpt's finetune outcome directly:
 Update MODEL_PATH to result Sophon model from previous section.
@@ -124,7 +123,7 @@ python stage2_train/bd_algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res1
 The output ckpt will be saved to `irreversible_backdoor_models/targeted_backdoor_loss/[args.arch]/[args.dataset]/[current_time]/checkpoints/`.
 
 
-### Test finetune
+### Evaluation - Test finetune
 Update MODEL_PATH in `stage3_eval/eval_backdoor_ASR.py` to result irreversible backdoor model from previous section and run:
 
 ```bash
@@ -135,15 +134,3 @@ The output result will be saved under MODEL_PATH folder `irreversible_backdoor_m
 Results contains:
 1. Clean dataset accuracy before and after finetune.
 2. Clean dataset accuracy + targeted ASR during finetune process.
-
-
-
-
-
-
-
-
-
-
-
-
