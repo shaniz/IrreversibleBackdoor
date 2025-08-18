@@ -45,7 +45,7 @@ def args_parser():
     parser.add_argument('--arch', default='res18', type=str)
     parser.add_argument('--dataset', default='CIFAR10', type=str, choices=['CIFAR10', 'MNIST', 'SVHN', 'STL', 'CINIC'])
     # parser.add_argument('--finetune_epochs', default=5, type=int)
-    parser.add_argument('--finetune_epochs', default=20, type=int)
+    parser.add_argument('--finetune_epochs', default=10, type=int)
     parser.add_argument('--final_finetune_epochs', default=20, type=int)
     parser.add_argument('--finetune_lr', default=0.0001, type=float)
     parser.add_argument('--fast_lr', default=0.0001, type=float)

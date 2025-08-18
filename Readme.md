@@ -16,7 +16,7 @@ Jiangyi Deng (1), Shengyuan Pang (1), Yanjiao Chen (1), Liangming Xia (1), Yijie
 This repo contains:
 
 1. 'sophon_orig' folder: A refactored implementation of the classification part in paper: **SOPHON: Non-Fine-Tunable Learning to Restrain Task Transferability
-For Pre-trained Models** Original implementation: [https://github.com/ChiangE/Sophon].
+For Pre-trained Models**. Original implementation: [https://github.com/ChiangE/Sophon].
 
 2. 'irreversible_backdoor' folder: An implementation of our paper - ******. Drawing ideas from Sophon implementation
 It implements a learning algorithm used to prevent a targeted backdoor removal later finetune process on foundation models. 
