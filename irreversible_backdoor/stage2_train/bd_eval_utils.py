@@ -36,8 +36,8 @@ def evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_te
             optimizer.step()
 
         acc, loss = evaluate(model, testloader, torch.device('cuda'))
-        all_clean_acc. append(acc)
-        all_clean_loss. append(loss)
+        all_clean_acc.append(acc)
+        all_clean_loss.append(loss)
         print(f"Epoch {ep}- clean acc: {acc}")
         print(f"Epoch {ep}- clean loss: {loss}")
 

@@ -1,0 +1,9 @@
+Total Loop,Finetune Restrict Clean Test Acc,Finetune Restrict Poisoned Test Loss,Finetune Restrict Poisoned Test ASR
+1,40.343,1.242,48.788
+2,35.576,0.256,97.737
+3,35.909,0.171,97.798
+4,33.99,0.243,96.798
+5,33.384,0.242,96.606
+6,27.616,0.128,99.061
+7,26.111,0.1,99.101
+8,33.657,1.337,66.354

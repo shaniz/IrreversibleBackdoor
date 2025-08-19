@@ -1,0 +1,18 @@
+{
+    "MODEL_PATH": "../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/res18/CIFAR10/8-19_9-32-38/checkpoints/final_orig91.72_ASR89.283.pth",
+    "DATA_DIR": "../../datasets",
+    "DATASET": "CIFAR10",
+    "ARCH": "resnet18",
+    "TARGET_LABEL": 0,
+    "TRIGGER_SIZE": 5,
+    "BATCH_SIZE": 64,
+    "FINETUNE_EPOCHS": 100,
+    "FINETUNE_LR": 0.0001,
+    "NUM_CLASSES": 10,
+    "CLEAN_ACC_FILENAME": "clean_acc.csv",
+    "ASR_FILENAME": "ASR_before_finetune.csv",
+    "TARGETED_ASR_FINETUNE_FILENAME": "targeted_backdoor_ASR_finetune.csv",
+    "UNTARGETED_ASR_FINETUNE_FILENAME": "untargeted_backdoor_ASR_finetune.csv",
+    "RESULT_DIR": "../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/res18/CIFAR10/8-19_9-32-38",
+    "ARGS_FILE": "eval_args.json"
+}

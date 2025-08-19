@@ -38,15 +38,15 @@ def args_parser():
     parser.add_argument('--fts_loop', default=1, type=int)
     parser.add_argument('--ntr_loop', default=1, type=int)
     # parser.add_argument('--total_loop', default=1000, type=int)
-    parser.add_argument('--total_loop', default=400, type=int)
+    parser.add_argument('--total_loop', default=300, type=int)
     parser.add_argument('--alpha', default=3.0, type=float, help='coefficient of maml lr')
     parser.add_argument('--beta', default=5.0, type=float, help='coefficient of natural lr')
     parser.add_argument('--test_iterval', default=25, type=int)
     parser.add_argument('--arch', default='res18', type=str)
     parser.add_argument('--dataset', default='CIFAR10', type=str, choices=['CIFAR10', 'MNIST', 'SVHN', 'STL', 'CINIC'])
     # parser.add_argument('--finetune_epochs', default=5, type=int)
-    parser.add_argument('--finetune_epochs', default=10, type=int)
-    parser.add_argument('--final_finetune_epochs', default=20, type=int)
+    parser.add_argument('--finetune_epochs', default=20, type=int)
+    # parser.add_argument('--final_finetune_epochs', default=20, type=int)
     parser.add_argument('--finetune_lr', default=0.0001, type=float)
     parser.add_argument('--fast_lr', default=0.0001, type=float)
     parser.add_argument('--root', default='irreversible_backdoor_models', type=str)
@@ -75,22 +75,20 @@ def main(
     _, orig_testset = get_dataset(dataset=ORIG_DATASET, data_path=ORIG_DATA_DIR, arch=args.arch)
 
     poisoned_orig_trainloader = DataLoader(poisoned_orig_trainset, batch_size=args.bs, shuffle=True, num_workers=4, persistent_workers=True)
-    orig_testloader = DataLoader(orig_testset, batch_size=args.bs, shuffle=False, num_workers=4, persistent_workers=True)
-    poisoned_orig_testloader = DataLoader(poisoned_orig_testset, batch_size=args.bs, shuffle=False, num_workers=4, persistent_workers=True)
+    orig_testloader = DataLoader(orig_testset, batch_size=args.bs, shuffle=True, num_workers=4, persistent_workers=True)
+    poisoned_orig_testloader = DataLoader(poisoned_orig_testset, batch_size=args.bs, shuffle=True, num_workers=4, persistent_workers=True)
 
     # restricted domain
     restrict_trainset, restrict_testset = get_dataset(dataset=args.dataset, data_path=RESTRICT_DATA_DIR, arch=args.arch)
     restrict_trainloader = DataLoader(restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
-    restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
+    restrict_testloader = DataLoader(restrict_testset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
 
     poisoned_restrict_trainset, poisoned_restrict_testset = get_dataset(dataset=args.dataset, data_path=RESTRICT_DATA_DIR, arch=args.arch, backdoor_train=True, backdoor_test=True, poison_percent=1.0, target_label=TARGET_LABEL, trigger_size=TRIGGER_SIZE)
     poisoned_restrict_trainloader = DataLoader(poisoned_restrict_trainset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
-    poisoned_restrict_testloader = DataLoader(poisoned_restrict_testset, batch_size=args.bs, shuffle=False, num_workers=4, drop_last=True, persistent_workers=True)
+    poisoned_restrict_testloader = DataLoader(poisoned_restrict_testset, batch_size=args.bs, shuffle=True, num_workers=4, drop_last=True, persistent_workers=True)
 
 
     circular_dual_dl = CircularDualDataloader(restrict_trainloader, poisoned_restrict_trainloader)
-
-    # circular_dual_dl = CircularDualDataloader(poisoned_restrict_trainloader, poisoned_restrict_testloader)
 
     poisoned_orig_iter = iter(poisoned_orig_trainloader)
 
@@ -219,7 +217,19 @@ def main(
     print(f"Orig ({ORIG_DATASET}) test acc: {final_orig_test_acc}%\n"
           f"Orig ({ORIG_DATASET}) test loss: {final_orig_test_loss}")
 
-    save_path = f'{save_dir}/{CHECKPOINTS_SUBDIR}/final_orig{final_orig_test_acc}.pth'
+    print('\n=============== Final Evaluate ==============')
+    # For final evaluation - run stage3_eval/eval_backdoor_ASR.py
+    test_model2 = copy.deepcopy(model.module)
+
+    all_restrict_clean_acc, _, all_restrict_poisoned_acc, all_restrict_poisoned_loss = evaluate_backdoor_after_finetune(
+        test_model2, restrict_trainloader, restrict_testloader, poisoned_restrict_testloader, args.finetune_epochs,
+        args.finetune_lr)
+
+    print(f'Final finetune outcome:\n '
+          f'Restrict ({args.dataset}) poisoned test accuracy - targeted ASR: {all_restrict_poisoned_acc[-1]}%\n'
+          f'Restrict ({args.dataset}) clean test accuracy: {all_restrict_clean_acc[-1]}')
+
+    save_path = f'{save_dir}/{CHECKPOINTS_SUBDIR}/final_orig{final_orig_test_acc}_ASR{all_restrict_poisoned_acc[-1]}.pth'
     save_model(model, save_path, args)
 
     bd_save_data(save_dir,
@@ -227,8 +237,6 @@ def main(
                 all_orig_train_loss, all_orig_test_acc, all_orig_targeted_asr,
                 all_finetune_restrict_clean_acc, all_finetune_restrict_test_loss, all_finetune_restrict_targeted_asr,
                 total_loop_idx, fts_idx, ntr_idx)
-
-    # For final evaluation - run stage3_eval/eval_backdoor_ASR.py
 
     return save_path
 
