@@ -46,6 +46,7 @@ def args_parser():
     parser.add_argument('--dataset', default='CIFAR10', type=str, choices=['CIFAR10', 'MNIST', 'SVHN'])
     # parser.add_argument('--finetune_epochs', default=5, type=int)
     parser.add_argument('--finetune_epochs', default=20, type=int)
+    parser.add_argument('--final_finetune_epochs', default=20, type=int)
     # parser.add_argument('--final_finetune_epochs', default=20, type=int)
     parser.add_argument('--finetune_lr', default=0.0001, type=float)
     parser.add_argument('--fast_lr', default=0.0001, type=float)
@@ -222,7 +223,7 @@ def main(
     test_model2 = copy.deepcopy(model.module)
 
     all_restrict_clean_acc, _, all_restrict_poisoned_acc, all_restrict_poisoned_loss = evaluate_backdoor_after_finetune(
-        test_model2, restrict_trainloader, restrict_testloader, poisoned_restrict_testloader, args.finetune_epochs,
+        test_model2, restrict_trainloader, restrict_testloader, poisoned_restrict_testloader, args.final_finetune_epochs,
         args.finetune_lr)
 
     print(f'Final finetune outcome:\n '
