@@ -170,7 +170,7 @@ def get_dataset(dataset, data_path, arch, backdoor_train=False, backdoor_test=Fa
     else:
         exit('unknown datasets: %s' % dataset)
 
-    # update datasets in case of backdoor
+    # update datasets in case of a backdoor
     if backdoor_train:
         trainset = PoisonedDataset(
             dataset=trainset,
