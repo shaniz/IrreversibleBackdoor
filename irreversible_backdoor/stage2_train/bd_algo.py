@@ -42,8 +42,8 @@ def args_parser():
     parser.add_argument('--alpha', default=3.0, type=float, help='coefficient of maml lr')
     parser.add_argument('--beta', default=5.0, type=float, help='coefficient of natural lr')
     parser.add_argument('--test_iterval', default=25, type=int)
-    parser.add_argument('--arch', default='res18', type=str)
-    parser.add_argument('--dataset', default='CIFAR10', type=str, choices=['CIFAR10', 'MNIST', 'SVHN', 'STL', 'CINIC'])
+    parser.add_argument('--arch', default='resnet18', type=str, choices=['resnet18', 'resnet34', 'resnet50'])
+    parser.add_argument('--dataset', default='CIFAR10', type=str, choices=['CIFAR10', 'MNIST', 'SVHN'])
     # parser.add_argument('--finetune_epochs', default=5, type=int)
     parser.add_argument('--finetune_epochs', default=20, type=int)
     # parser.add_argument('--final_finetune_epochs', default=20, type=int)
@@ -228,6 +228,9 @@ def main(
     print(f'Final finetune outcome:\n '
           f'Restrict ({args.dataset}) poisoned test accuracy - targeted ASR: {all_restrict_poisoned_acc[-1]}%\n'
           f'Restrict ({args.dataset}) clean test accuracy: {all_restrict_clean_acc[-1]}')
+    all_finetune_restrict_targeted_asr.append(all_restrict_poisoned_acc[-1])
+    all_finetune_restrict_test_loss.append(all_restrict_poisoned_loss[-1])
+    all_finetune_restrict_clean_acc.append(all_restrict_clean_acc[-1])
 
     save_path = f'{save_dir}/{CHECKPOINTS_SUBDIR}/final_orig{final_orig_test_acc}_ASR{all_restrict_poisoned_acc[-1]}.pth'
     save_model(model, save_path, args)

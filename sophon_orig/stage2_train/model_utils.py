@@ -184,7 +184,7 @@ def get_pretrained_model(arch, model_path, partial_finetuned=False):
                 param.requires_grad = True
         return model.cuda()
 
-    elif arch == 'res18':
+    elif arch == 'resnet18':
         model = resnet18(pretrained=False, num_classes=10).cuda()
         model.load_state_dict(process(torch.load(model_path)['model']))
         if partial_finetuned:
@@ -194,7 +194,7 @@ def get_pretrained_model(arch, model_path, partial_finetuned=False):
                 param.requires_grad = True
         return model.cuda()
 
-    elif arch == 'res34':
+    elif arch == 'resnet34':
         model = resnet34(pretrained=False, num_classes=10).cuda()
         model.load_state_dict(process(torch.load(model_path)['model']))
         if partial_finetuned:
@@ -204,7 +204,7 @@ def get_pretrained_model(arch, model_path, partial_finetuned=False):
                 param.requires_grad = True
         return model.cuda()
 
-    elif arch == 'res50':
+    elif arch == 'resnet50':
         model = resnet50(pretrained=False, num_classes=10).cuda()
         model.load_state_dict(process(torch.load(model_path)['model']))
         if partial_finetuned:
@@ -214,7 +214,7 @@ def get_pretrained_model(arch, model_path, partial_finetuned=False):
                 param.requires_grad = True
         return model.cuda()
     else:
-        assert (0)
+        assert 0
 
 
 def save_bn(model):

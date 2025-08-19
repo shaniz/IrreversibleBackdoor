@@ -6,8 +6,6 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 import random
 from PIL import Image
-import torch
-import os
 
 
 class CircularDualDataloader:
@@ -135,9 +133,44 @@ def get_dataset(dataset, data_path, arch, backdoor_train=False, backdoor_test=Fa
         trainset = datasets.CIFAR10(data_path, train=True, download=True, transform=transform)  # no augmentation
         testset = datasets.CIFAR10(data_path, train=False, download=True, transform=transform)
 
+    elif dataset == 'MNIST':
+        mean = [0.1307, 0.1307, 0.1307]
+        std = [0.3081, 0.3081, 0.3081]
+        if arch == 'vgg':
+            size = 64
+            transform = transforms.Compose([
+                transforms.Resize([size, size]),
+                transforms.Grayscale(num_output_channels=3),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=mean, std=std)
+            ])
+        else:
+            transform = transforms.Compose([
+                transforms.Grayscale(num_output_channels=3),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=mean, std=std)
+            ])
+        trainset = datasets.MNIST(data_path, train=True, download=True, transform=transform)
+        testset = datasets.MNIST(data_path, train=False, download=True, transform=transform)
+
+    elif dataset == 'SVHN':
+        if arch == 'vgg':
+            size = 64
+            transform = transforms.Compose([
+                transforms.Resize([size, size]),
+                transforms.ToTensor()
+            ])
+        else:
+            transform = transforms.Compose([
+                transforms.ToTensor()
+            ])
+        trainset = datasets.SVHN(data_path, split='train', transform=transform, download=True)
+        testset = datasets.SVHN(data_path, split='test', transform=transform, download=True)
+
     else:
         exit('unknown datasets: %s' % dataset)
 
+    # update datasets in case of backdoor
     if backdoor_train:
         trainset = PoisonedDataset(
             dataset=trainset,

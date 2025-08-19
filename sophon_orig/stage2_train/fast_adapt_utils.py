@@ -7,13 +7,13 @@ from sophon_orig.stage2_train.eval_utils import accuracy
 
 
 def initialize(arch, model):
-    if arch == 'res50':
+    if arch == 'resnet50':
         last_layer = model.module.module.fc
     elif arch == 'caformer':
         last_layer = model.module.module.head.fc.fc2
-    elif arch == 'res18':
+    elif arch == 'resnet18':
         last_layer = model.module.module.fc
-    elif arch == 'res34':
+    elif arch == 'resnet34':
         last_layer = model.module.module.fc
     elif arch == 'vgg':
         last_layer = model.module.module.fc

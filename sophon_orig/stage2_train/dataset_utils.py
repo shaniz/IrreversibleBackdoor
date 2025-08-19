@@ -177,9 +177,9 @@ def get_dataset(dataset, data_path, arch):
 
         # data = torch.load(data_path + '/imagenette.pt')
         # image_train = data['images train']
-        # image_test = data['images stage3_eval']
+        # image_test = data['images test']
         # target_train = data['targets train']
-        # target_test = data['targets stage3_eval']
+        # target_test = data['targets test']
         # if arch == 'vgg':
         #     trainset = ResizedTensorDataset(image_train, target_train)
         #     testset = ResizedTensorDataset(image_test, target_test)
@@ -200,7 +200,7 @@ def get_dataset(dataset, data_path, arch):
                 transforms.ToTensor(),
             ])
         trainset = datasets.SVHN(data_path, split='train', transform=transform, download=True)
-        testset = datasets.SVHN(data_path, split='stage3_eval', transform=transform, download=True)
+        testset = datasets.SVHN(data_path, split='test', transform=transform, download=True)
 
     elif dataset == 'CINIC':
         cinic_directory = data_path + '/' + 'CINIC10/'
@@ -211,7 +211,7 @@ def get_dataset(dataset, data_path, arch):
             transforms.Normalize(mean=mean, std=std)
         ])
         trainset = datasets.ImageFolder(cinic_directory + '/train', transform=transform)
-        testset = datasets.ImageFolder(cinic_directory + '/stage3_eval', transform=transform)
+        testset = datasets.ImageFolder(cinic_directory + '/test', transform=transform)
 
     elif dataset == 'STL':
         list_img_train = []
@@ -333,5 +333,5 @@ def get_dataset(dataset, data_path, arch):
 #         for images, targets in tqdm(testloader):
 #             image_test.extend(images)
 #             target_test.extend(targets)
-#         torch.save({'images train': image_train, 'images stage3_eval': image_test, 'targets train': target_train,
-#                     'targets stage3_eval': target_test}, f'../../datasets/{subset}.pt')
+#         torch.save({'images train': image_train, 'images test': image_test, 'targets train': target_train,
+#                     'targets test': target_test}, f'../../datasets/{subset}.pt')

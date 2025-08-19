@@ -28,6 +28,14 @@ Each main folder (sophon_orig, irreversible_backdoor) contains 3 subfolders:
 3. stage3_eval - evaluation script.
 
 
+### Supported architectures
+`['resnet18', 'resnet34', 'resnet50']`.
+### Supported datasets
+`['CIFAR10', 'MNIST', 'SVHN']`
+
+Those are the datasets for the latter fine-tuning the foundation model. Dataset for the first pretraining step is always `ImageNette`.  
+
+
 ## Preparation
 
 ### Installing requirements by:
@@ -62,7 +70,7 @@ Update MODEL_PATH in algo.py to pretrained model from previous section (placed i
 For inverse cross-entropy sophon, run:
 
 ```bash
-python stage2_train/algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18
+python stage2_train/algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch resnet18
 ```
 
 The output ckpt will be saved to `sophon_models/inverse_loss/[args.arch]/[args.dataset]/[current_time]/checkpoints/`
@@ -72,7 +80,7 @@ Results is saved under MODEL_PATH folder - `sophon_models/inverse_loss/[args.arc
 For kl divergence from uniform distribution sophon, run:
 
 ```bash
-python stage2_train/algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18 --loss_type kl
+python stage2_train/algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch resnet18 --loss_type kl
 ```
 The output ckpt will be saved to `sophon_models/kl_loss/[args.arch]/[args.dataset]/[current_time]/checkpoints/`
 Results is saved under MODEL_PATH folder - `sophon_models/kl_loss/[args.arch]/[args.dataset]/[current_time]/`
@@ -117,7 +125,7 @@ The output result will be saved in the MODEL_PATH folder.
 ### Train Irreversible Backdoor Model
 Update MODEL_PATH in `stage2_train/bd_algo.py` to the pretrained backdoor model from previous section (placed in `stage1_pretrain/pretrained_backdoor_models`).
 ```bash
-python stage2_train/bd_algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch res18
+python stage2_train/bd_algo.py --alpha 3 --beta 5 --datasets CIFAR10 --arch resnet18
 ```
 
 The output ckpt will be saved to `irreversible_backdoor_models/targeted_backdoor_loss/[args.arch]/[args.dataset]/[current_time]/checkpoints/`.
@@ -125,6 +133,8 @@ The output ckpt will be saved to `irreversible_backdoor_models/targeted_backdoor
 
 ### Evaluation - Test finetune
 Update MODEL_PATH in `stage3_eval/eval_backdoor_ASR.py` to result irreversible backdoor model from previous section and run:
+
+!!Notice!!: generally, MODEL_PATH should be the final checkpoint created in the previous part (`final_` prefix in model file). If the final created model was created after a drop in original accuracy, take one previous checkpoint from the final one (ASR after finetune should be higher). 
 
 ```bash
 python stage3_eval/eval_backdoor_ASR.py

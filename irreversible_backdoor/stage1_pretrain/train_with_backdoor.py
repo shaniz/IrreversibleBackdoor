@@ -17,11 +17,11 @@ BATCH_SIZE = 64
 NUM_EPOCHS = 20
 NUM_CLASSES = 10
 LEARNING_RATE = 1e-3
-ARGS_FILE  = "conatants.json"
+ARGS_FILE  = "pretrain_args.json"
 
 
 if __name__ == "__main__":
-    model = torch.nn.DataParallel(build_model(num_classes=NUM_CLASSES))
+    model = torch.nn.DataParallel(build_model(arch=ARCH, num_classes=NUM_CLASSES))
 
     poisoned_trainset, testset = get_dataset(dataset=DATASET, data_path=DATA_DIR, arch=ARCH, backdoor_train=True, poison_percent=POISON_PERCENT, target_label=TARGET_LABEL, trigger_size=TRIGGER_SIZE)
 

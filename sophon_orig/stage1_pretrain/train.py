@@ -14,12 +14,12 @@ DATA_DIR = '../../datasets/imagenette2'
 DATASET = 'ImageNette'
 # DATA_DIR = '../../datasets'
 # DATASET = 'CIFAR10'
-ARCH = 'res18'
+ARCH = 'resnet18'
 NUM_CLASSES = 10
 BATCH_SIZE = 64
 NUM_EPOCHS = 2
 LEARNING_RATE = 1e-3
-ARGS_FILE = "constants.json"
+ARGS_FILE = "pretrain_args.json"
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

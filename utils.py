@@ -29,8 +29,16 @@ def write_constants_to_json(filename):
 
 
 # ---- Model ----
-def build_model(num_classes):
-    model = models.resnet18(pretrained=True)
+def build_model(arch, num_classes):
+    if arch == 'resnet18':
+        model = models.resnet18(pretrained=True)
+    elif arch == 'resnet34':
+        model = models.resnet34(pretrained=True)
+    elif arch == 'resnet50':
+        model = models.resnet50(pretrained=True)
+    else:
+        assert 0  # unsupported model
+
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     return model.to(device)
 

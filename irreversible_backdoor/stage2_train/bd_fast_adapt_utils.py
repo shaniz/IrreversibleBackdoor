@@ -54,13 +54,13 @@ def fast_adapt_punish_if_backdoor_fails(adaptation_steps, circular_dual_dl, lear
 
 
 def fast_adapt_punish_if_backdoor_fails2(clean_batches, poisoned_batches, learner, criterion, shots, ways, device, arch):
-    # First try for the nes loss, gets OOM Out Of Memory error
+    # First try for the backdoor loss, gets OOM (Out Of Memory error)
     learner = initialize(arch, learner)
     total_attack_loss = 0.0
     attack_acc = 0
     total_poisoned_samples = 0
 
-    # Simulate clean finetune, then stage3_eval if attack still works
+    # Simulate clean finetune, then test if attack still works
     for index, (clean_batch, poisoned_batch) in enumerate(zip(clean_batches, poisoned_batches)):
         # --- Clean batch for adaptation ---
         clean_data, clean_labels = clean_batch

@@ -9,10 +9,10 @@ from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_backdoor_a
 from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_untargeted_attack
 
 # MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-17_7-53-54/checkpoints/ep20_bd-train-acc97.962_clean-test-acc85.197.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/res18/CIFAR10/8-17_22-57-56/checkpoints/orig91.873_ASR99.646.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/res18/CIFAR10/8-17_22-57-56/checkpoints/orig91.873_ASR99.646.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/res18/CIFAR10/8-19_1-34-38/checkpoints/ep174_orig91.771_ASR99.101.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/res18/CIFAR10/8-19_9-32-38/checkpoints/final_orig91.72_ASR89.283.pth'
+MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-17_22-57-56/checkpoints/orig91.873_ASR99.646.pth'
+MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-17_22-57-56/checkpoints/orig91.873_ASR99.646.pth'
+MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-19_1-34-38/checkpoints/ep174_orig91.771_ASR99.101.pth'
+MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-19_9-32-38/checkpoints/final_orig91.72_ASR89.283.pth'
 
 
 DATA_DIR = '../../datasets'
@@ -35,7 +35,7 @@ ARGS_FILE = "eval_args.json"
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    model = torch.nn.DataParallel(build_model(num_classes=NUM_CLASSES)) # for irreversible
+    model = torch.nn.DataParallel(build_model(arch=ARCH, num_classes=NUM_CLASSES)) # for irreversible
     # model = build_model(num_classes=NUM_CLASSES)
     # cp = torch.load(MODEL_PATH, map_location='cpu')['model']
     model.load_state_dict(torch.load(MODEL_PATH, map_location='cpu')['model'])

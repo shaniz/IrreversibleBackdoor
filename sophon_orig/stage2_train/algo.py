@@ -17,7 +17,7 @@ from eval_utils import evaluate, evaluate_after_finetune
 from fast_adapt_utils import fast_adapt_multibatch_inverse, fast_adapt_multibatch_kl_uniform
 
 
-PRETRAINED_MODEL_PATH = '../stage1_pretrain/pretrained_models/res18/ImageNette/8-13_23-48-1/checkpoints/res18_ImageNette_ep-2_train-acc98.659_test-acc87.338.pth'
+PRETRAINED_MODEL_PATH = '../stage1_pretrain/pretrained_models/resnet18/ImageNette/8-13_23-48-1/checkpoints/resnet18_ImageNette_ep-2_train-acc98.659_test-acc87.338.pth'
 LOSS_TYPE_TO_FUNC = {
     "inverse": fast_adapt_multibatch_inverse,
     "kl": fast_adapt_multibatch_kl_uniform
@@ -39,7 +39,7 @@ def args_parser():
     # parser.add_argument('--test_iterval', default=10, type=int)
     parser.add_argument('--test_iterval', default=25, type=int)
     # parser.add_argument('--arch', default='caformer', type=str)
-    parser.add_argument('--arch', default='res18', type=str)
+    parser.add_argument('--arch', default='resnet18', type=str, choices=['resnet18', 'resnet34', 'resnet50', 'caformer', 'vgg'])
     parser.add_argument('--dataset', default='CIFAR10', type=str, choices=['CIFAR10', 'MNIST', 'SVHN', 'STL', 'CINIC'])
     parser.add_argument('--finetune_epochs', default=5, type=int)
     parser.add_argument('--final_finetune_epochs', default=20, type=int)

@@ -5,13 +5,13 @@ from sophon_orig.stage2_train.model_utils import set_seed, get_pretrained_model
 from sophon_orig.stage2_train.dataset_utils import get_dataset
 from sophon_orig.stage2_train.eval_utils import evaluate_after_finetune
 
-MODEL_PATH = '../../stage2_train/sophon_models/inverse_loss/res18_CIFAR10/8_1_15_59_13/90.11_17.47_2.2233.pt'
+MODEL_PATH = '../../stage2_train/sophon_models/inverse_loss/resnet18_CIFAR10/8_1_15_59_13/90.11_17.47_2.2233.pt'
 
 sys.path.append('/')
 def args_parser():
     parser = argparse.ArgumentParser(description='train N shadow pretrained_backdoor_models')
     parser.add_argument('--bs', default=200, type=int)
-    parser.add_argument('--arch', default='res18', type=str)
+    parser.add_argument('--arch', default='resnet18', type=str)
     parser.add_argument('--gpus', default='0,1', type=str)
     parser.add_argument('--truly_finetune_epochs', default=30, type=int)
     parser.add_argument('--finetune_lr', default=0.0001, type=float)
@@ -42,14 +42,14 @@ if __name__ == '__main__':
         print(f"test_loss: {test_loss}")
     ### normal pretrained
     # elif args.start == 'normal':
-    #     print('========stage3_eval normal pretrained: direct all=========')
+    #     print('========test normal pretrained: direct all=========')
     #     # 'normal pretrained/direct all'
     #     model = get_pretrained_model(args)
     #     acc, test_loss = evaluate_after_finetune(model.cuda(), trainset_tar, testset_tar, args.truly_finetune_epochs, args.finetune_lr)
 
     # ### train from scratch
     # elif args.start == 'sratch':
-    #     print('========stage3_eval train from scratch=========')
+    #     print('========test train from scratch=========')
     #     # 'train from scratch/'
     #     acc, test_loss = evaluate_after_finetune(model.cuda(), trainset_tar, testset_tar, args.truly_finetune_epochs, args.finetune_lr)
     #
