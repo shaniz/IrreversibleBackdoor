@@ -17,7 +17,7 @@ after finetune:
 CIFAR10:
 clean acc
 targeted ASR
-untargeted ASR
+untargeted ASR ?
 
 
 
@@ -36,6 +36,5 @@ untargeted ASR
 after finetune:
 CIFAR10:
 clean acc
-
-
 targeted ASR
+untargeted ASR ?
