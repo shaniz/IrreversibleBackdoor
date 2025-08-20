@@ -25,8 +25,7 @@ BATCH_SIZE = 64
 FINETUNE_EPOCHS = 100
 FINETUNE_LR = 0.0001
 NUM_CLASSES = 10
-CLEAN_ACC_FILENAME = 'clean_acc.csv'
-BEFORE_FINETUNE_FILENAME = 'ASR_before_finetune.csv'
+SUMMARIZED_RESULTS_FILENAME = 'summarized_results.csv'
 TARGETED_ASR_FINETUNE_FILENAME = 'targeted_backdoor_ASR_finetune.csv'
 UNTARGETED_ASR_FINETUNE_FILENAME = 'untargeted_backdoor_ASR_finetune.csv'
 RESULT_DIR = os.path.dirname(os.path.dirname(MODEL_PATH)) # take out also 'checkpoints'
@@ -116,21 +115,18 @@ if __name__ == "__main__":
     # Evaluate on poisoned validation set
     acc_after = evaluate(model, testloader)
     print(f"Clean dataset accuracy after finetune: {acc_after:.4f}")
+    print(f"Clean dataset accuracy after finetune - from array: {all_clean_acc[-1]:.4f}")
 
 
     # Save all to files
     write_constants_to_json(f'{RESULT_DIR}/{ARGS_FILE}')
 
-    with open(f'{RESULT_DIR}/{BEFORE_FINETUNE_FILENAME}', "w", newline="") as file:
+    with open(f'{RESULT_DIR}/{SUMMARIZED_RESULTS_FILENAME}', "w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(['Dataset', 'Clean Acc', 'Untargeted ASR', 'Targeted ASR'])
-        writer.writerow([ORIG_DATASET, orig_acc_before, orig_untargeted_asr, orig_targeted_asr])
-        writer.writerow([DATASET, acc_before, untargeted_asr, targeted_asr])
-
-    with open(f'{RESULT_DIR}/{CLEAN_ACC_FILENAME}', "w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(['Dataset','Clean Acc Before', 'Clean Acc After'])
-        writer.writerow([DATASET, acc_before, acc_after])
+        writer.writerow(['Dataset', 'Before/After', 'Clean Acc', 'Untargeted ASR', 'Targeted ASR'])
+        writer.writerow([ORIG_DATASET, 'before', orig_acc_before, orig_untargeted_asr, orig_targeted_asr])
+        writer.writerow([DATASET, 'before', acc_before, untargeted_asr, targeted_asr])
+        writer.writerow([DATASET, 'after', acc_after, '', targeted_all_poisoned_acc[-1]])
 
     with open(f'{RESULT_DIR}/{TARGETED_ASR_FINETUNE_FILENAME}', mode='w', newline='') as file:
         writer = csv.writer(file)
