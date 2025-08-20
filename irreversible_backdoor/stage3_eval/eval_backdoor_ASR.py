@@ -8,11 +8,11 @@ from irreversible_backdoor.stage2_train.bd_dataset_utils import PoisonedDataset,
 from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_backdoor_after_finetune, untargeted_evaluate_after_finetune
 from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_untargeted_attack
 
-# MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-17_7-53-54/checkpoints/ep20_bd-train-acc97.962_clean-test-acc85.197.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-17_22-57-56/checkpoints/orig91.873_ASR99.646.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-19_1-34-38/checkpoints/ep174_orig91.771_ASR99.101.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-20_1-48-44/checkpoints/final_orig91.72_ASR89.283.pth'
-
+MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-17_7-53-54/checkpoints/ep20_bd-train-acc97.962_clean-test-acc85.197.pth'
+# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-17_22-57-56/checkpoints/orig91.873_ASR99.646.pth'
+# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-19_1-34-38/checkpoints/ep174_orig91.771_ASR99.101.pth'
+# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-20_1-48-44/checkpoints/final_orig91.72_ASR89.283.pth'
+#
 
 DATA_DIR = '../../datasets'
 DATASET = 'CIFAR10'
@@ -83,41 +83,41 @@ if __name__ == "__main__":
 
     # evaluate orig dataset before finetune
     orig_acc_before = evaluate(model, orig_testloader)
-    print(f"{ORIG_DATASET} - Orig clean dataset accuracy before finetune: {orig_acc_before:.4f}")
+    print(f"{ORIG_DATASET} - Orig clean dataset accuracy before finetune: {orig_acc_before:.4f}%")
 
     print(F"Orig dataset ASR calculated for 100% poisoned testset!")
     # Evaluate on poisoned validation set
     orig_targeted_asr = evaluate(model, orig_targeted_poisoned_testloader)
-    print(f"{ORIG_DATASET} - Targeted Attack Success Rate (ASR): {orig_targeted_asr:.4f}")
+    print(f"{ORIG_DATASET} - Targeted Attack Success Rate (ASR): {orig_targeted_asr:.4f}%")
 
     orig_untargeted_asr = evaluate_untargeted_attack(model, orig_untargeted_poisoned_testloader, device)
-    print(f"{ORIG_DATASET} - Orig dataset untargeted Attack Success Rate (ASR): {orig_untargeted_asr:.4f}")
+    print(f"{ORIG_DATASET} - Orig dataset untargeted Attack Success Rate (ASR): {orig_untargeted_asr:.4f}%")
 
     # evaluate 'restrict' dataset before finetune
     acc_before = evaluate(model, testloader)
-    print(f"{DATASET} - Clean dataset accuracy before finetune: {acc_before:.4f}")
+    print(f"{DATASET} - Clean dataset accuracy before finetune: {acc_before:.4f}%")
 
     print("ASR calculated for 100% poisoned testset!")
     # Evaluate on poisoned validation set
     targeted_asr = evaluate(model, targeted_poisoned_testloader)
-    print(f"{DATASET} - Targeted Attack Success Rate (ASR): {targeted_asr:.4f}")
+    print(f"{DATASET} - Targeted Attack Success Rate (ASR): {targeted_asr:.4f}%")
 
     untargeted_asr = evaluate_untargeted_attack(model, untargeted_poisoned_testloader, device)
-    print(f"{DATASET} - Untargeted Attack Success Rate (ASR): {untargeted_asr:.4f}")
+    print(f"{DATASET} - Untargeted Attack Success Rate (ASR): {untargeted_asr:.4f}%")
 
     print("Finetune with clean dataset, at every epoch - accuracy for both clean + 100% poisoned testset")
 
     all_clean_acc, all_clean_loss, targeted_all_poisoned_acc, targeted_all_poisoned_loss, untargeted_all_poisoned_acc = evaluate_backdoor_after_finetune(model, trainloader, testloader, targeted_poisoned_testloader, FINETUNE_EPOCHS, FINETUNE_LR, untargeted=untargeted, untargeted_poisoned_testloader=untargeted_poisoned_testloader)
-    print(f"Targeted Attack Success Rate (ASR): {targeted_all_poisoned_acc[-1]:.4f}")
+    print(f"Targeted Attack Success Rate (ASR): {targeted_all_poisoned_acc[-1]:.4f}%")
 
     untargeted_asr_afetr = ''  # relevant if untargeted=False
     if untargeted:
         untargeted_asr_afetr = untargeted_all_poisoned_acc[-1]
-        print(f"Untargeted Attack Success Rate (ASR): {untargeted_asr_afetr:.4f}")
+        print(f"Untargeted Attack Success Rate (ASR): {untargeted_asr_afetr:.4f}%")
 
     # Evaluate on poisoned validation set
     # acc_after = evaluate(model, testloader)
-    print(f"Clean dataset accuracy after finetune: {all_clean_acc[-1]:.4f}")
+    print(f"Clean dataset accuracy after finetune: {all_clean_acc[-1]:.4f}%")
 
 
     # Save all to files

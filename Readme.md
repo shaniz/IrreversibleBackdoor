@@ -134,7 +134,9 @@ The output ckpt will be saved to `irreversible_backdoor_models/targeted_backdoor
 ### Evaluation - Test finetune
 Update MODEL_PATH in `stage3_eval/eval_backdoor_ASR.py` to result irreversible backdoor model from previous section and run:
 
-!!Notice!!: generally, MODEL_PATH should be the final checkpoint created in the previous part (`final_` prefix in model file). If the final created model was created after a drop in original accuracy, take one previous checkpoint from the final one (ASR after finetune should be higher). 
+!!Notice!!: generally, MODEL_PATH should be the final checkpoint created in the previous part (`final_` prefix in model file). 
+If the final created model was created after a drop in original accuracy, take one previous checkpoint from the final one (ASR after finetune should be higher).
+If you see that the final ASR (appears in file name) has a drop at some point, take one previous checkpoint before the drop.
 
 ```bash
 python stage3_eval/eval_backdoor_ASR.py
