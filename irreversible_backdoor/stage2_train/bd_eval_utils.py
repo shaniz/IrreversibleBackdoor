@@ -50,7 +50,7 @@ def evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_te
 
         if untargeted:
             acc = evaluate_untargeted_attack(model, untargeted_poisoned_testloader, torch.device('cuda'))
-            all_poisoned_acc.append(acc)
+            all_untargeted_poisoned_acc.append(acc)
             print(f"Epoch {ep}- untargeted ASR: {acc}")
 
     return all_clean_acc, all_clean_loss, all_poisoned_acc, all_poisoned_loss, all_untargeted_poisoned_acc

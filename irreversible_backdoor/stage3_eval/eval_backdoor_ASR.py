@@ -11,8 +11,8 @@ from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_untargeted
 MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-17_7-53-54/checkpoints/ep20_bd-train-acc97.962_clean-test-acc85.197.pth'
 # MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-17_22-57-56/checkpoints/orig91.873_ASR99.646.pth'
 # MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-19_1-34-38/checkpoints/ep174_orig91.771_ASR99.101.pth'
-# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-20_1-48-44/checkpoints/final_orig91.72_ASR89.283.pth'
-#
+MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-20_1-48-44/checkpoints/ep249_orig91.643_ASR99.808.pth'
+
 
 DATA_DIR = '../../datasets'
 DATASET = 'CIFAR10'
@@ -30,7 +30,7 @@ TARGETED_ASR_FINETUNE_FILENAME = 'targeted_backdoor_ASR_finetune.csv'
 UNTARGETED_ASR_FINETUNE_FILENAME = 'untargeted_backdoor_ASR_finetune.csv'
 RESULT_DIR = os.path.dirname(os.path.dirname(MODEL_PATH)) # take out also 'checkpoints'
 ARGS_FILE = "eval_args.json"
-untargeted = True  # whether to include also untargeted analysis. relevant only for pretrained model (the trained model loss is suitable for targeted attacks).
+UNTARGETED = False  # whether to include also untargeted analysis. relevant only for pretrained model (the trained model loss is suitable for targeted attacks).
 
 
 if __name__ == "__main__":
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(MODEL_PATH, map_location='cpu')['model'])
 
     trainset, testset = get_dataset(dataset=DATASET, data_path=DATA_DIR, arch=ARCH)
-    _, orig_testset = get_dataset(dataset=DATASET, data_path=DATA_DIR, arch=ARCH)
+    _, orig_testset = get_dataset(dataset=ORIG_DATASET, data_path=ORIG_DATA_DIR, arch=ARCH)
 
     targeted_poisoned_testset = PoisonedDataset(
         dataset=testset,
@@ -107,11 +107,11 @@ if __name__ == "__main__":
 
     print("Finetune with clean dataset, at every epoch - accuracy for both clean + 100% poisoned testset")
 
-    all_clean_acc, all_clean_loss, targeted_all_poisoned_acc, targeted_all_poisoned_loss, untargeted_all_poisoned_acc = evaluate_backdoor_after_finetune(model, trainloader, testloader, targeted_poisoned_testloader, FINETUNE_EPOCHS, FINETUNE_LR, untargeted=untargeted, untargeted_poisoned_testloader=untargeted_poisoned_testloader)
+    all_clean_acc, all_clean_loss, targeted_all_poisoned_acc, targeted_all_poisoned_loss, untargeted_all_poisoned_acc = evaluate_backdoor_after_finetune(model, trainloader, testloader, targeted_poisoned_testloader, FINETUNE_EPOCHS, FINETUNE_LR, untargeted=UNTARGETED, untargeted_poisoned_testloader=untargeted_poisoned_testloader)
     print(f"Targeted Attack Success Rate (ASR): {targeted_all_poisoned_acc[-1]:.4f}%")
 
     untargeted_asr_afetr = ''  # relevant if untargeted=False
-    if untargeted:
+    if UNTARGETED:
         untargeted_asr_afetr = untargeted_all_poisoned_acc[-1]
         print(f"Untargeted Attack Success Rate (ASR): {untargeted_asr_afetr:.4f}%")
 
@@ -137,7 +137,7 @@ if __name__ == "__main__":
         for i, j, k, q, m in zip(range(FINETUNE_EPOCHS), all_clean_loss, all_clean_acc, targeted_all_poisoned_loss, targeted_all_poisoned_acc):
             writer.writerow([i, j, k, q, m])
 
-    if untargeted:
+    if UNTARGETED:
         with open(f'{RESULT_DIR}/{UNTARGETED_ASR_FINETUNE_FILENAME}', mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['Epoch', 'Untargeted ASR'])
