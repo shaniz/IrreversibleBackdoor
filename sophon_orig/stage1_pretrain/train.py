@@ -36,12 +36,11 @@ def main(model_path):
 
     model, train_loss, train_acc, test_acc = train(model=model, train_loader=train_loader, testloader=testloader, num_epochs=NUM_EPOCHS, lr=LEARNING_RATE)
 
-
     save_dir = SAVE_DIR + '/' + ARCH + '/' + DATASET + '/'
     now = datetime.now()
     save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}/checkpoints'
     os.makedirs(save_dir, exist_ok=True)
-    save_path = f'{save_dir}/{ARCH}_{DATASET}_ep-{NUM_EPOCHS}_train-acc{round(train_acc, 3)}_test-acc{round(test_acc, 3)}.pth'
+    save_path = f'{save_dir}/ep{NUM_EPOCHS}_train-acc{round(train_acc, 3)}_test-acc{round(test_acc, 3)}.pth'
 
     save_model(model, save_path, train_loss, train_acc, test_acc)
     write_constants_to_json(f'{save_dir}/{ARGS_FILE}')

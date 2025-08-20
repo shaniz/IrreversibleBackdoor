@@ -11,7 +11,7 @@ from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_untargeted
 MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-17_7-53-54/checkpoints/ep20_bd-train-acc97.962_clean-test-acc85.197.pth'
 # MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-17_22-57-56/checkpoints/orig91.873_ASR99.646.pth'
 # MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-19_1-34-38/checkpoints/ep174_orig91.771_ASR99.101.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-20_1-48-44/checkpoints/ep249_orig91.643_ASR99.808.pth'
+# MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-20_1-48-44/checkpoints/ep249_orig91.643_ASR99.808.pth'
 
 
 DATA_DIR = '../../datasets'
@@ -30,7 +30,7 @@ TARGETED_ASR_FINETUNE_FILENAME = 'targeted_backdoor_ASR_finetune.csv'
 UNTARGETED_ASR_FINETUNE_FILENAME = 'untargeted_backdoor_ASR_finetune.csv'
 RESULT_DIR = os.path.dirname(os.path.dirname(MODEL_PATH)) # take out also 'checkpoints'
 ARGS_FILE = "eval_args.json"
-UNTARGETED = False  # whether to include also untargeted analysis. relevant only for pretrained model (the trained model loss is suitable for targeted attacks).
+UNTARGETED = True  # whether to include also untargeted analysis. relevant only for pretrained model (the trained model loss is suitable for targeted attacks).
 
 
 if __name__ == "__main__":

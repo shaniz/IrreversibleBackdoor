@@ -86,7 +86,6 @@ def untargeted_evaluate_after_finetune(model, trainloader, testloader, poisoned_
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4)
     criterion = nn.CrossEntropyLoss()
 
-    acc = 0, 0
     all_clean_acc = []
     # all_clean_loss = []
     all_poisoned_acc = []
@@ -103,7 +102,7 @@ def untargeted_evaluate_after_finetune(model, trainloader, testloader, poisoned_
             loss.backward()
             optimizer.step()
 
-        acc = evaluate(model, testloader, torch.device('cuda'))
+        acc, _ = evaluate(model, testloader, torch.device('cuda'))
         all_clean_acc.append(acc)
         # all_clean_loss. append(loss)
         print(f"Epoch {ep}- clean acc: {acc}")

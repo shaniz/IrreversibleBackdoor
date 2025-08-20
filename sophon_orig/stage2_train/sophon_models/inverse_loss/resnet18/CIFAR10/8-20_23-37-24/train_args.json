@@ -3,7 +3,7 @@
     "bs": 150,
     "fts_loop": 1,
     "ntr_loop": 1,
-    "total_loop": 1000,
+    "total_loop": 2,
     "alpha": 3.0,
     "beta": 5.0,
     "test_iterval": 25,
@@ -17,6 +17,7 @@
     "seed": 99,
     "adaptation_steps": 50,
     "loss_type": "inverse",
-    "PRETRAINED_MODEL_PATH": "../stage1_pretrain/pretrained_models/resnet18/ImageNette/8-13_23-48-1/resnet18_ImageNette_ep-2_train-acc98.659_test-acc87.338.pth",
-    "ARGS_FILE": "train_args.json"
+    "PRETRAINED_MODEL_PATH": "../stage1_pretrain/pretrained_models/resnet18/ImageNette/8-13_23-48-1/checkpoints/ep2_train-acc98.659_test-acc87.338.pth",
+    "ARGS_FILE": "train_args.json",
+    "CHECKPOINTS_SUBDIR": "checkpoints"
 }

@@ -1,5 +1,5 @@
 {
-    "MODEL_PATH": "../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-20_1-48-44/checkpoints/final_orig91.72_ASR89.283.pth",
+    "MODEL_PATH": "../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-20_1-48-44/checkpoints/ep249_orig91.643_ASR99.808.pth",
     "DATA_DIR": "../../datasets",
     "DATASET": "CIFAR10",
     "ORIG_DATA_DIR": "../../datasets/imagenette2",
@@ -15,5 +15,6 @@
     "TARGETED_ASR_FINETUNE_FILENAME": "targeted_backdoor_ASR_finetune.csv",
     "UNTARGETED_ASR_FINETUNE_FILENAME": "untargeted_backdoor_ASR_finetune.csv",
     "RESULT_DIR": "../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-20_1-48-44",
-    "ARGS_FILE": "eval_args.json"
+    "ARGS_FILE": "eval_args.json",
+    "UNTARGETED": false
 }

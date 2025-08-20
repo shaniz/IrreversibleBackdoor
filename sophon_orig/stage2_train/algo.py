@@ -17,7 +17,7 @@ from eval_utils import evaluate, evaluate_after_finetune
 from fast_adapt_utils import fast_adapt_multibatch_inverse, fast_adapt_multibatch_kl_uniform
 
 
-PRETRAINED_MODEL_PATH = '../stage1_pretrain/pretrained_models/resnet18/ImageNette/8-13_23-48-1/checkpoints/resnet18_ImageNette_ep-2_train-acc98.659_test-acc87.338.pth'
+PRETRAINED_MODEL_PATH = '../stage1_pretrain/pretrained_models/resnet18/ImageNette/8-13_23-48-1/checkpoints/ep2_train-acc98.659_test-acc87.338.pth'
 LOSS_TYPE_TO_FUNC = {
     "inverse": fast_adapt_multibatch_inverse,
     "kl": fast_adapt_multibatch_kl_uniform
@@ -135,7 +135,7 @@ def main(
             loss_fts = -loss_fts.item()
 
             print(f'FTS - restrict train loss {loss_fts}\n'
-                  f'FTS - restrict train accuracy {acc_fts} %')
+                  f'FTS - restrict train accuracy {acc_fts}%')
             all_restrict_train_loss.append(loss_fts)
             all_restrict_train_acc.append(acc_fts)
             
@@ -168,7 +168,7 @@ def main(
             natural_optimizer.step()
             
             test_orig_acc, test_orig_loss = evaluate(model, orig_testloader, device)
-            print(f"Original test acc: {test_orig_acc} %\n"
+            print(f"Original test acc: {test_orig_acc}%\n"
                   f"Original test loss: {test_orig_loss}")
             all_orig_test_acc.append(test_orig_acc)
             all_orig_test_loss.append(test_orig_loss)
@@ -188,7 +188,7 @@ def main(
             finetune_restrict_test_acc, finetune_restrict_test_loss = evaluate_after_finetune(test_model, restrict_trainloader, restrict_testloader,
                                                                      args.finetune_epochs, args.finetune_lr)
             print(f'Finetune outcome:\n'
-                  f'Restrict test accuracy: {finetune_restrict_test_acc}, Restrict test loss: {finetune_restrict_test_loss}')
+                  f'Restrict test accuracy: {finetune_restrict_test_acc}%, Restrict test loss: {finetune_restrict_test_loss}')
             all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
             all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
 
@@ -210,7 +210,7 @@ def main(
     test_model2 = copy.deepcopy(model.module)
     final_finetune_restrict_test_acc, final_finetune_restrict_test_loss = evaluate_after_finetune(test_model2, restrict_trainloader, restrict_testloader, args.final_finetune_epochs, args.finetune_lr)
     print(f'Final finetune outcome:\n'
-          f'Restrict test accuracy: {final_finetune_restrict_test_acc}, Restrict test loss: {final_finetune_restrict_test_loss}')
+          f'Restrict test accuracy: {final_finetune_restrict_test_acc}%, Restrict test loss: {final_finetune_restrict_test_loss}')
 
     save_path = f'{save_dir}/{CHECKPOINTS_SUBDIR}/orig-acc{test_orig_acc}_restrict-ft-acc{final_finetune_restrict_test_acc}.pth'
     save_model(model, save_path, args)
@@ -233,7 +233,7 @@ if __name__ == '__main__':
     save_dir = save_dir + '/' + f'{now.month}-{now.day}_{now.hour}-{now.minute}-{now.second}/'
     os.makedirs(f'{save_dir}/{CHECKPOINTS_SUBDIR}', exist_ok=True)
     constants = {name: value for name, value in globals().items() if name.isupper() and isinstance(value, (str, int, float))}
-    save_args_to_file(args, constants, f'{save_dir}/{ARGS_FILE}')
+    save_args_to_file(args, constants, file_path=f'{save_dir}/{ARGS_FILE}')
 
     ckpt = main(args=args,
                 model_path=PRETRAINED_MODEL_PATH,

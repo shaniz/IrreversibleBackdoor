@@ -258,7 +258,7 @@ if __name__ == '__main__':
     #os.makedirs(save_dir, exist_ok=True)
     os.makedirs(f'{save_dir}/{CHECKPOINTS_SUBDIR}', exist_ok=True)
     constants = {name: value for name, value in globals().items() if name.isupper() and isinstance(value, (str, int, float))}
-    save_args_to_file(args, constants, f'{save_dir}/{ARGS_FILE}')
+    save_args_to_file(args, constants, file_path=f'{save_dir}/{ARGS_FILE}')
 
     ckpt = main(args=args,
                 model_path=MODEL_PATH,
