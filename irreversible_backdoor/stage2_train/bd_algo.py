@@ -197,7 +197,7 @@ def main(
 
             test_model = copy.deepcopy(model.module)
 
-            all_restrict_clean_acc, _, all_restrict_poisoned_acc, all_restrict_poisoned_loss = evaluate_backdoor_after_finetune(
+            all_restrict_clean_acc, _, all_restrict_poisoned_acc, all_restrict_poisoned_loss, _ = evaluate_backdoor_after_finetune(
                 test_model, restrict_trainloader, restrict_testloader, poisoned_restrict_testloader, args.finetune_epochs, args.finetune_lr)
 
             print(f'Finetune outcome:\n '
@@ -225,7 +225,7 @@ def main(
     # For final evaluation - run stage3_eval/eval_backdoor_ASR.py
     test_model2 = copy.deepcopy(model.module)
 
-    all_restrict_clean_acc, _, all_restrict_poisoned_acc, all_restrict_poisoned_loss = evaluate_backdoor_after_finetune(
+    all_restrict_clean_acc, _, all_restrict_poisoned_acc, all_restrict_poisoned_loss, _ = evaluate_backdoor_after_finetune(
         test_model2, restrict_trainloader, restrict_testloader, poisoned_restrict_testloader, args.final_finetune_epochs,
         args.finetune_lr)
 

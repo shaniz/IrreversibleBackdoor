@@ -6,7 +6,7 @@ from tqdm import tqdm
 from sophon_orig.stage2_train.eval_utils import evaluate
 
 
-def evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_testloader, epochs, lr):
+def evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_testloader, epochs, lr, untargeted=False, untargeted_poisoned_testloader=None):
     """
     Finetune model on clean data + calculate accuracy+loss on finetuned model
     """
@@ -20,6 +20,7 @@ def evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_te
     all_clean_loss = []
     all_poisoned_acc = []
     all_poisoned_loss = []
+    all_untargeted_poisoned_acc = []
 
     # acc, _ = evaluate(model, poisoned_testloader, torch.device('cuda'))
     # print(f"Targeted ASR before finetune: {acc}")
@@ -47,7 +48,12 @@ def evaluate_backdoor_after_finetune(model, trainloader, testloader, poisoned_te
         print(f"Epoch {ep}- poisoned acc, targeted ASR: {acc}")
         print(f"Epoch {ep}- poisoned loss: {loss}")
 
-    return all_clean_acc, all_clean_loss, all_poisoned_acc, all_poisoned_loss
+        if untargeted:
+            acc = evaluate_untargeted_attack(model, untargeted_poisoned_testloader, torch.device('cuda'))
+            all_poisoned_acc.append(acc)
+            print(f"Epoch {ep}- poisoned acc, untargeted ASR: {acc}")
+
+    return all_clean_acc, all_clean_loss, all_poisoned_acc, all_poisoned_loss, all_untargeted_poisoned_acc
 
 
 def evaluate_untargeted_attack(model, testloader, device):
@@ -97,7 +103,7 @@ def untargeted_evaluate_after_finetune(model, trainloader, testloader, poisoned_
             loss.backward()
             optimizer.step()
 
-        acc = evaluate_untargeted_attack(model, testloader, torch.device('cuda'))
+        acc = evaluate(model, testloader, torch.device('cuda'))
         all_clean_acc.append(acc)
         # all_clean_loss. append(loss)
         print(f"Epoch {ep}- clean acc: {acc}")

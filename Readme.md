@@ -20,7 +20,7 @@ For Pre-trained Models**. Original implementation: [https://github.com/ChiangE/S
 
 2. 'irreversible_backdoor' folder: An implementation of our paper - ******. Drawing ideas from Sophon implementation
 It implements a learning algorithm used to prevent a targeted backdoor removal later finetune process on foundation models. 
-It uses same ideas from Sophon paper, with updated loss function to achieve the new goal.
+It uses same ideas from Sophon paper, with updated loss function to achieve the new goal. The difference is in the maml part (FTS loop) - instead of adapting on clean dataset and 'punish' according to the loss function in the paper (inverse loss or kl divergence on  clean dataset), we are adapting on clean dataset and the loss function is classic but calculated on a 100% poisoned dataset. 
 
 Each main folder (sophon_orig, irreversible_backdoor) contains 3 subfolders:
 1. stage1_pretrain - pretrain model on origin domain (clean/poisoned depend on project).

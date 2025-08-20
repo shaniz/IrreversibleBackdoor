@@ -30,6 +30,7 @@ TARGETED_ASR_FINETUNE_FILENAME = 'targeted_backdoor_ASR_finetune.csv'
 UNTARGETED_ASR_FINETUNE_FILENAME = 'untargeted_backdoor_ASR_finetune.csv'
 RESULT_DIR = os.path.dirname(os.path.dirname(MODEL_PATH)) # take out also 'checkpoints'
 ARGS_FILE = "eval_args.json"
+untargeted = True  # whether to include also untargeted analysis. relevant only for pretrained model (the trained model loss is suitable for targeted attacks).
 
 
 if __name__ == "__main__":
@@ -49,7 +50,7 @@ if __name__ == "__main__":
         trigger_size=TRIGGER_SIZE,
         target_label=TARGET_LABEL
     )
-    
+
     untargeted_poisoned_testset = PoisonedDataset(
         dataset=testset,
         poison_percent=1.0,  # 100% poisoned
@@ -105,17 +106,18 @@ if __name__ == "__main__":
     print(f"{DATASET} - Untargeted Attack Success Rate (ASR): {untargeted_asr:.4f}")
 
     print("Finetune with clean dataset, at every epoch - accuracy for both clean + 100% poisoned testset")
-    all_clean_acc, all_clean_loss, targeted_all_poisoned_acc, targeted_all_poisoned_loss = evaluate_backdoor_after_finetune(model, trainloader, testloader, targeted_poisoned_testloader, FINETUNE_EPOCHS, FINETUNE_LR)
+
+    all_clean_acc, all_clean_loss, targeted_all_poisoned_acc, targeted_all_poisoned_loss, untargeted_all_poisoned_acc = evaluate_backdoor_after_finetune(model, trainloader, testloader, targeted_poisoned_testloader, FINETUNE_EPOCHS, FINETUNE_LR, untargeted=untargeted, untargeted_poisoned_testloader=untargeted_poisoned_testloader)
     print(f"Targeted Attack Success Rate (ASR): {targeted_all_poisoned_acc[-1]:.4f}")
 
-    # # !!!NOTICE!!! - UNCOMMENT THIS CODE REQUIRES MODEL COPY
-    # all_clean_acc, untargeted_all_poisoned_acc = untargeted_evaluate_after_finetune(model, trainloader, testloader, untargeted_poisoned_testloader, FINETUNE_EPOCHS, FINETUNE_LR)
-    # print(f"Untargeted Attack Success Rate (ASR): {untargeted_all_poisoned_acc[-1]:.4f}")
+    untargeted_asr_afetr = ''  # relevant if untargeted=False
+    if untargeted:
+        untargeted_asr_afetr = untargeted_all_poisoned_acc[-1]
+        print(f"Untargeted Attack Success Rate (ASR): {untargeted_asr_afetr:.4f}")
 
     # Evaluate on poisoned validation set
-    acc_after = evaluate(model, testloader)
-    print(f"Clean dataset accuracy after finetune: {acc_after:.4f}")
-    print(f"Clean dataset accuracy after finetune - from array: {all_clean_acc[-1]:.4f}")
+    # acc_after = evaluate(model, testloader)
+    print(f"Clean dataset accuracy after finetune: {all_clean_acc[-1]:.4f}")
 
 
     # Save all to files
@@ -126,7 +128,7 @@ if __name__ == "__main__":
         writer.writerow(['Dataset', 'Before/After', 'Clean Acc', 'Untargeted ASR', 'Targeted ASR'])
         writer.writerow([ORIG_DATASET, 'before', orig_acc_before, orig_untargeted_asr, orig_targeted_asr])
         writer.writerow([DATASET, 'before', acc_before, untargeted_asr, targeted_asr])
-        writer.writerow([DATASET, 'after', acc_after, '', targeted_all_poisoned_acc[-1]])
+        writer.writerow([DATASET, 'after', all_clean_acc[-1], untargeted_asr_afetr, targeted_all_poisoned_acc[-1]])
 
     with open(f'{RESULT_DIR}/{TARGETED_ASR_FINETUNE_FILENAME}', mode='w', newline='') as file:
         writer = csv.writer(file)
@@ -135,9 +137,10 @@ if __name__ == "__main__":
         for i, j, k, q, m in zip(range(FINETUNE_EPOCHS), all_clean_loss, all_clean_acc, targeted_all_poisoned_loss, targeted_all_poisoned_acc):
             writer.writerow([i, j, k, q, m])
 
-    # with open(f'{RESULT_DIR}/{UNTARGETED_ASR_FINETUNE_FILENAME}', mode='w', newline='') as file:
-    #     writer = csv.writer(file)
-    #     writer.writerow(['Epoch', 'Untargeted ASR'])
-    #
-    #     for i, j in zip(range(FINETUNE_EPOCHS), untargeted_all_poisoned_acc):
-    #         writer.writerow([i, j])
+    if untargeted:
+        with open(f'{RESULT_DIR}/{UNTARGETED_ASR_FINETUNE_FILENAME}', mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Epoch', 'Untargeted ASR'])
+
+            for i, j in zip(range(FINETUNE_EPOCHS), untargeted_all_poisoned_acc):
+                writer.writerow([i, j])
