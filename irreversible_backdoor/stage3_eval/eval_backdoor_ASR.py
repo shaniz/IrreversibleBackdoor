@@ -10,9 +10,8 @@ from irreversible_backdoor.stage2_train.bd_eval_utils import evaluate_untargeted
 
 # MODEL_PATH = '../stage1_pretrain/pretrained_backdoor_models/resnet18/ImageNette/8-17_7-53-54/checkpoints/ep20_bd-train-acc97.962_clean-test-acc85.197.pth'
 MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-17_22-57-56/checkpoints/orig91.873_ASR99.646.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-17_22-57-56/checkpoints/orig91.873_ASR99.646.pth'
 MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-19_1-34-38/checkpoints/ep174_orig91.771_ASR99.101.pth'
-MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-19_9-32-38/checkpoints/final_orig91.72_ASR89.283.pth'
+MODEL_PATH = '../stage2_train/irreversible_backdoor_models/targeted_backdoor_loss/resnet18/CIFAR10/8-20_1-48-44/checkpoints/final_orig91.72_ASR89.283.pth'
 
 
 DATA_DIR = '../../datasets'
@@ -117,6 +116,7 @@ if __name__ == "__main__":
     # Evaluate on poisoned validation set
     acc_after = evaluate(model, testloader)
     print(f"Clean dataset accuracy after finetune: {acc_after:.4f}")
+
 
     # Save all to files
     write_constants_to_json(f'{RESULT_DIR}/{ARGS_FILE}')

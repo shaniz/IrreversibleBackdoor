@@ -103,6 +103,7 @@ def main(
     all_orig_targeted_asr = []
 
     total_loop_idx = []
+    total_loop_idx_finetune = []
     fts_idx = []
     ntr_idx = []
 
@@ -192,6 +193,7 @@ def main(
 
         if (i+1) % args.test_iterval == 0:
             print('***************** Evaluation after Finetune *****************')
+            total_loop_idx_finetune.append(i)
 
             test_model = copy.deepcopy(model.module)
 
@@ -218,7 +220,8 @@ def main(
     print(f"Orig ({ORIG_DATASET}) test acc: {final_orig_test_acc}%\n"
           f"Orig ({ORIG_DATASET}) test loss: {final_orig_test_loss}")
 
-    print('\n=============== Final Evaluate ==============')
+    print(f'\n=============== Evaluate Final Finetune ({args.final_finetune_epochs} epochs) ===============')
+    total_loop_idx_finetune.append('final')
     # For final evaluation - run stage3_eval/eval_backdoor_ASR.py
     test_model2 = copy.deepcopy(model.module)
 
@@ -240,7 +243,7 @@ def main(
                 all_restrict_train_loss, all_restrict_train_acc,
                 all_orig_train_loss, all_orig_test_acc, all_orig_targeted_asr,
                 all_finetune_restrict_clean_acc, all_finetune_restrict_test_loss, all_finetune_restrict_targeted_asr,
-                total_loop_idx, fts_idx, ntr_idx)
+                total_loop_idx, fts_idx, ntr_idx, total_loop_idx_finetune)
 
     return save_path
 

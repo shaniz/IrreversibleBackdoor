@@ -87,10 +87,11 @@ def main(
     all_orig_test_acc = []  # calculated after NTR - evaluate func
     all_restrict_train_loss = []  # calculated during FTS - fast adapt func
     all_restrict_train_acc = []  # calculated during FTS - fast adapt func
-    all_finetune_restrict_targeted_asr = []  # calculated every test_iterval iters - evaluate_after_finetune func
+    all_finetune_restrict_test_acc = []  # calculated every test_iterval iters - evaluate_after_finetune func
     all_finetune_restrict_test_loss = []  # calculated every test_iterval iters - evaluate_after_finetune func
 
     total_loop_idx = []
+    total_loop_idx_finetune = []
     fts_idx = []
     ntr_idx = []
 
@@ -181,13 +182,14 @@ def main(
 
         if (i+1) % args.test_iterval == 0:
             print('***************** Evaluation after Finetune *****************')
+            total_loop_idx_finetune.append(i)
 
             test_model = copy.deepcopy(model.module)
             finetune_restrict_test_acc, finetune_restrict_test_loss = evaluate_after_finetune(test_model, restrict_trainloader, restrict_testloader,
                                                                      args.finetune_epochs, args.finetune_lr)
             print(f'Finetune outcome:\n'
                   f'Restrict test accuracy: {finetune_restrict_test_acc}, Restrict test loss: {finetune_restrict_test_loss}')
-            all_finetune_restrict_targeted_asr.append(finetune_restrict_test_acc)
+            all_finetune_restrict_test_acc.append(finetune_restrict_test_acc)
             all_finetune_restrict_test_loss.append(finetune_restrict_test_loss)
 
             save_path = f'{save_dir}/{CHECKPOINTS_SUBDIR}/loop{i}_orig{test_orig_acc}_restrict-ft{finetune_restrict_test_acc}.pth'
@@ -204,6 +206,7 @@ def main(
           f"Original test loss: {final_orig_test_loss}")
 
     print(f'\n************** Evaluate Final Finetune ({args.final_finetune_epochs} epochs) ***************')
+    total_loop_idx_finetune.append('final')
     test_model2 = copy.deepcopy(model.module)
     final_finetune_restrict_test_acc, final_finetune_restrict_test_loss = evaluate_after_finetune(test_model2, restrict_trainloader, restrict_testloader, args.final_finetune_epochs, args.finetune_lr)
     print(f'Final finetune outcome:\n'
@@ -215,9 +218,9 @@ def main(
     save_data(save_dir,
               all_restrict_train_loss, all_restrict_train_acc,
               all_orig_test_loss, all_orig_train_loss, all_orig_test_acc,
-              all_finetune_restrict_targeted_asr, all_finetune_restrict_test_loss,
+              all_finetune_restrict_test_acc, all_finetune_restrict_test_loss,
               final_orig_test_acc, final_finetune_restrict_test_acc, final_finetune_restrict_test_loss,
-              total_loop_idx, fts_idx, ntr_idx)
+              total_loop_idx, fts_idx, ntr_idx, total_loop_idx_finetune)
     return save_path
 
 
