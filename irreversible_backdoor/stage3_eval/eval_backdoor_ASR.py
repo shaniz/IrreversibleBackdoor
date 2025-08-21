@@ -30,7 +30,7 @@ TARGETED_ASR_FINETUNE_FILENAME = 'targeted_backdoor_ASR_finetune.csv'
 UNTARGETED_ASR_FINETUNE_FILENAME = 'untargeted_backdoor_ASR_finetune.csv'
 RESULT_DIR = os.path.dirname(os.path.dirname(MODEL_PATH)) # take out also 'checkpoints'
 ARGS_FILE = "eval_args.json"
-UNTARGETED = True  # whether to include also untargeted analysis. relevant only for pretrained model (the trained model loss is suitable for targeted attacks).
+UNTARGETED = False  # whether to include also untargeted analysis. relevant only for pretrained model (the trained model loss is suitable for targeted attacks).
 
 
 if __name__ == "__main__":

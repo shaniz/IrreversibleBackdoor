@@ -29,7 +29,7 @@ Each main folder (sophon_orig, irreversible_backdoor) contains 3 subfolders:
 
 
 ### Supported architectures
-`['resnet18', 'resnet34', 'resnet50']`.
+`['resnet18', 'resnet34', 'resnet50', 'caformer']`.
 ### Supported datasets
 `['CIFAR10', 'MNIST', 'SVHN']`
 

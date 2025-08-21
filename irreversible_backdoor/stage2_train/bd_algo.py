@@ -42,7 +42,7 @@ def args_parser():
     parser.add_argument('--alpha', default=3.0, type=float, help='coefficient of maml lr')
     parser.add_argument('--beta', default=5.0, type=float, help='coefficient of natural lr')
     parser.add_argument('--test_iterval', default=25, type=int)
-    parser.add_argument('--arch', default='resnet18', type=str, choices=['resnet18', 'resnet34', 'resnet50'])
+    parser.add_argument('--arch', default='resnet18', type=str, choices=['resnet18', 'resnet34', 'resnet50', 'caformer'])
     parser.add_argument('--dataset', default='CIFAR10', type=str, choices=['CIFAR10', 'MNIST', 'SVHN'])
     # parser.add_argument('--finetune_epochs', default=5, type=int)
     parser.add_argument('--finetune_epochs', default=20, type=int)

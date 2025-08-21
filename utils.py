@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import models
 
+import timm
 from tqdm import tqdm
 import inspect
 import json
@@ -32,14 +33,23 @@ def write_constants_to_json(filename):
 def build_model(arch, num_classes):
     if arch == 'resnet18':
         model = models.resnet18(pretrained=True)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+
     elif arch == 'resnet34':
         model = models.resnet34(pretrained=True)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+
     elif arch == 'resnet50':
         model = models.resnet50(pretrained=True)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+
+    elif arch == 'caformer':
+        model = timm.create_model(model_name="caformer_m36", pretrained=False)
+        model.head.fc.fc2 = nn.Linear(model.head.fc.fc2.in_features, num_classes)
+
     else:
         assert 0  # unsupported model
 
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
     return model.to(device)
 
 
