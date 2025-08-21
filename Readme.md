@@ -31,7 +31,7 @@ Each main folder (sophon_orig, irreversible_backdoor) contains 3 subfolders:
 ### Supported architectures
 `['resnet18', 'resnet34', 'resnet50', 'caformer']`.
 ### Supported datasets
-`['CIFAR10', 'MNIST', 'SVHN']`
+`['CIFAR10', 'MNIST', 'SVHN']`.
 
 Those are the datasets for the latter fine-tuning the foundation model. Dataset for the first pretraining step is always `ImageNette`.  
 
