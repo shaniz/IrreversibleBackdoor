@@ -5,7 +5,9 @@ from sophon_orig.stage2_train.model_utils import set_seed, get_pretrained_model
 from sophon_orig.stage2_train.dataset_utils import get_dataset
 from sophon_orig.stage2_train.eval_utils import evaluate_after_finetune
 
+
 MODEL_PATH = '../../stage2_train/sophon_models/inverse_loss/resnet18_CIFAR10/8_1_15_59_13/90.11_17.47_2.2233.pt'
+
 
 sys.path.append('/')
 def args_parser():

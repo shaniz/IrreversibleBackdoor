@@ -8,6 +8,7 @@ from sophon_orig.stage2_train.dataset_utils import get_dataset
 from sophon_orig.stage2_train.model_utils import get_pretrained_model
 from utils import train, save_model, write_constants_to_json
 
+
 MODEL_PATH = 'pretrained_models/resnet18_imagenette_20ep.pth'
 SAVE_DIR = 'pretrained_models'
 DATA_DIR = '../../datasets/imagenette2'
