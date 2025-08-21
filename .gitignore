@@ -1,0 +1,78 @@
+datasets
+sophon_orig/stage1_pretrain/pretrained_models
+irreversible_backdoor/stage1_pretrain/pretrained_backdoor_models
+**/checkpoints/*
+irreversible_backdoor/stage2_train/debug_images
+irreversible_backdoor/stage2_train/debug_images_poison
+
+.venv
+
+
+# Byte-compiled / optimized / compiled files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+.eggs/
+
+# Distribution / packaging
+dist/
+build/
+*.egg
+*.whl
+
+# Virtual environment
+venv/
+.venv/
+env/
+.env/
+# Add other virtual environment names if used (e.g., .conda, .virtualenvs)
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.bak
+*~.nib
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Database files
+*.sqlite3
+*.db
+
+# Configuration and sensitive files
+.env
+*.ini
+*.yml
+*.yaml
+# Add specific sensitive files not to be committed, e.g., API keys
+
+# Test and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# MyPy
+.mypy_cache/
+
+# PyInstaller
+*.spec
+build/
+dist/
+
+# Other common ignore patterns
+*.zip
+*.tar.gz
