@@ -1,10 +1,5 @@
-# SOPHON: Non-Fine-Tunable Learning to Restrain Task Transferability For Pre-trained Models
+# Irreversible Backdoor
 
-[https://arxiv.org/abs/2404.12699](https://arxiv.org/abs/2404.12699)
-
-Jiangyi Deng (1), Shengyuan Pang (1), Yanjiao Chen (1), Liangming Xia (1), Yijie Bai (1), Haiqin Weng (2), Wenyuan Xu (1) ((1) Zhejiang University, (2) Ant Group)
-
-**Accepted by IEEE Symposium on Security and Privacy 2024**
 
 ## Table of Contents
 + [Introduction](https://github.com/shaniz/Sophon/blob/ee37552f6abc8f0c26003c6bdc5ffb0dce590398/Readme.md#L17)
@@ -15,17 +10,18 @@ Jiangyi Deng (1), Shengyuan Pang (1), Yanjiao Chen (1), Liangming Xia (1), Yijie
 ## Introduction
 This repo contains:
 
-1. 'sophon_orig' folder: A refactored implementation of the classification part in paper: **SOPHON: Non-Fine-Tunable Learning to Restrain Task Transferability
-For Pre-trained Models**. Original implementation: [https://github.com/ChiangE/Sophon].
+1. **'sophon_orig'** folder: A refactored implementation of the classification part in paper: **SOPHON: Non-Fine-Tunable Learning to Restrain Task Transferability
+For Pre-trained Models** [https://arxiv.org/abs/2404.12699](https://arxiv.org/abs/2404.12699). 
+Original implementation: [https://github.com/ChiangE/Sophon]([https://github.com/ChiangE/Sophon]).
 
-2. 'irreversible_backdoor' folder: An implementation of our paper - ******. Drawing ideas from Sophon implementation
+2. **'irreversible_backdoor'** folder: An implementation of our paper - ******. Drawing ideas from Sophon implementation
 It implements a learning algorithm used to prevent a targeted backdoor removal later finetune process on foundation models. 
 It uses same ideas from Sophon paper, with updated loss function to achieve the new goal. The difference is in the maml part (FTS loop) - instead of adapting on clean dataset and 'punish' according to the loss function in the paper (inverse loss or kl divergence on  clean dataset), we are adapting on clean dataset and the loss function is classic but calculated on a 100% poisoned dataset. 
 
 Each main folder (sophon_orig, irreversible_backdoor) contains 3 subfolders:
-1. stage1_pretrain - pretrain model on origin domain (clean/poisoned depend on project).
-2. stage2_train - train the model according the new training .
-3. stage3_eval - evaluation script.
+1. **stage1_pretrain** - pretrain model on origin domain (clean/poisoned depend on project).
+2. **stage2_train** - train the model according the new training .
+3. **stage3_eval** - evaluation script.
 
 
 ### Supported architectures
