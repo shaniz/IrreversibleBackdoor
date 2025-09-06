@@ -33,7 +33,6 @@ Those are the datasets for the latter fine-tuning the foundation model. Dataset 
 
 
 ## Preparation
-
 Python version - 3.10.10.
 
 ### Installing requirements by:
