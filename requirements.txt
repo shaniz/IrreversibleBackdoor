@@ -1,9 +1,8 @@
-numpy
-tqdm
-timm
-learn2learn
+learn2learn==0.2.0
+numpy==1.26.4
+pillow==11.3.0
+timm==1.0.19
+tqdm==4.67.1
 
-Pillow
-
-torch
-torchvision
+torch==2.7.1+cu118
+torchvision==0.22.1+cu118
